@@ -173,6 +173,9 @@ textarea{width:100%;min-height:120px;background:var(--surface);border:1px solid 
 .recind i{width:10px;height:10px;border-radius:50%;background:var(--bad-fill);animation:pulso 1.2s ease-in-out infinite}
 @keyframes pulso{50%{opacity:.3}}
 @media (prefers-reduced-motion:reduce){.recind i{animation:none}}
+.lbl{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);font-weight:600;min-width:0}
+.lbl .inp{font-weight:400;color:var(--ink);width:100%}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 10px}
 footer{font-size:.82rem;color:var(--muted);max-width:75ch}
 </style>
 
@@ -274,6 +277,7 @@ let S;
 try{ const raw=localStorage.getItem(KEY); if(raw) S=JSON.parse(raw); }catch(e){}
 if(!S||!Array.isArray(S.a)) S=ejemplo();
 if(S.ej&&S.a.length>1&&S.a.every(a=>/ejemplo \d$/.test(a.n))){ uid=1; S=ejemplo(); }
+if(S.g.ini===undefined) S.g.ini=!S.ej||!!S.g.escuela;
 uid=Math.max(0,...S.a.map(a=>a.id))+1;
 let tab='grupo', sel=S.a[0]?S.a[0].id:null, confirmDel=null, confirmWipe=false, msg='';
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
@@ -304,9 +308,9 @@ function renderFields(){
     <label>Ciclo escolar<input id="f-ciclo" class="sm" style="width:7rem" data-g="ciclo" value="${esc(g.ciclo)}"></label>
     <label>Aplicación<select id="f-apl" data-g="apl">${['Primera','Segunda','Tercera'].map(x=>`<option${x===g.apl?' selected':''}>${x}</option>`).join('')}</select></label>`;
 }
-const TABS=[['grupo','Grupo'],['l','Lectura'],['t','Producción de textos'],['c','Cálculo mental'],['informe','Informes'],['datos','Datos']];
+const TABS=[['grupo','Grupo'],['l','Lectura'],['t','Producción de textos'],['c','Cálculo mental'],['informe','Informes'],['escuela','Escuela'],['datos','Datos']];
 function renderTabs(){
-  document.getElementById('tabs').innerHTML=TABS.map(([k,t])=>`<button role="tab" class="${SK[k]?'ev-'+k:''}" aria-selected="${tab===k}" data-a="tab" data-v="${k}" data-k="tab-${k}">${SK[k]?ICON[k]:''}${t}</button>`).join('');
+  document.getElementById('tabs').innerHTML=!S.g.ini?'':TABS.map(([k,t])=>`<button role="tab" class="${SK[k]?'ev-'+k:''}" aria-selected="${tab===k}" data-a="tab" data-v="${k}" data-k="tab-${k}">${SK[k]?ICON[k]:''}${t}</button>`).join('');
 }
 const svg=p=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const ICON={
@@ -617,6 +621,237 @@ function pdfDoc(alumnos){
   });
   return doc;
 }
+// ---------- Concentrado de escuela ----------
+let ESC=[];
+try{ const r0=localStorage.getItem('sisat-esc-v1'); if(r0) ESC=JSON.parse(r0); if(!Array.isArray(ESC)) ESC=[]; }catch(e){ ESC=[]; }
+const saveEsc=()=>{ try{ localStorage.setItem('sisat-esc-v1',JSON.stringify(ESC)); }catch(e){} };
+let escApl='', confirmEsc=false, codOut='';
+const APLS=['Primera','Segunda','Tercera'];
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const keyR=r=>[norm(r.esc),r.grado,norm(r.grupo),norm(r.ciclo),r.apl].join('|');
+const b64e=s=>{ const by=new TextEncoder().encode(s); let t=''; by.forEach(b=>{ t+=String.fromCharCode(b); }); return btoa(t); };
+const b64d=s=>{ const t=atob(s); return new TextDecoder().decode(Uint8Array.from(t,c=>c.charCodeAt(0))); };
+const GORD=g=>GRADOS.indexOf(g);
+const pc=(a,b)=>b?Math.round(a/b*100):0;
+
+// Resumen del grupo: solo cifras, sin nombres de alumnos ni observaciones.
+function resumenGrupo(){
+  const r={fmt:'sisat-resumen',v:1,esc:S.g.escuela||'',cct:S.g.cct||'',doc:S.g.docente||'',grado:S.g.grado,grupo:S.g.grupo,ciclo:S.g.ciclo,apl:S.g.apl,fecha:new Date().toISOString().slice(0,10),alumnos:S.a.length};
+  ['l','t'].forEach(k=>{ const s=groupStats(k); r[k]={n:s.n,d:s.d,comp:SK[k].rub.map((c,i)=>s.ev.reduce((x,e)=>x+e.a[k][i],0))}; });
+  const sc=groupStats('c'), err={op:0,ix:0,tm:0,ot:0,sin:0}; let ok=0, vis=0;
+  sc.ev.forEach(e=>{ ok+=e.sc; vis+=e.a.c.filter(v=>v==='v').length; e.a.c.forEach((v,i)=>{ if(v==='x'){ const t=e.a.ce&&e.a.ce[i]&&e.a.ce[i].t; err[t&&err[t]!==undefined?t:'sin']++; } }); });
+  r.c={n:sc.n,d:sc.d,ok,vis,err};
+  r.ap=S.a.filter(a=>['l','t','c'].some(k=>level(score(a,k),k)==='r')).length;
+  r.ap3=S.a.filter(a=>['l','t','c'].every(k=>level(score(a,k),k)==='r')).length;
+  return r;
+}
+const codigoDe=r=>'SISAT1:'+b64e(JSON.stringify(r));
+// Reconstruye el resumen solo con campos conocidos: lo que llega de otros es texto sin confianza.
+function limpia(r){
+  if(!r||r.fmt!=='sisat-resumen'||r.v!==1) return null;
+  const n=x=>{ x=+x; return isFinite(x)&&x>=0&&x<100000?Math.round(x):0; };
+  const d=o=>({e:n(o&&o.e),d:n(o&&o.d),r:n(o&&o.r)});
+  const s=v=>String(v==null?'':v).slice(0,120);
+  const o={fmt:'sisat-resumen',v:1,esc:s(r.esc).trim(),cct:s(r.cct),doc:s(r.doc),grado:s(r.grado),grupo:s(r.grupo),ciclo:s(r.ciclo),apl:s(r.apl),fecha:s(r.fecha),alumnos:n(r.alumnos),ap:n(r.ap),ap3:n(r.ap3)};
+  if(!o.esc||!GRADOS.includes(o.grado)||!APLS.includes(o.apl)) return null;
+  ['l','t'].forEach(k=>{ const q=r[k]||{}; const comp=(Array.isArray(q.comp)?q.comp:[]).slice(0,6).map(n); while(comp.length<6) comp.push(0); o[k]={n:n(q.n),d:d(q.d),comp}; });
+  const q=r.c||{}, e=q.err||{};
+  o.c={n:n(q.n),d:d(q.d),ok:n(q.ok),vis:n(q.vis),err:{op:n(e.op),ix:n(e.ix),tm:n(e.tm),ot:n(e.ot),sin:n(e.sin)}};
+  return o;
+}
+function importar(texto){
+  const hallados=[], t=String(texto||'').trim();
+  if(t.startsWith('{')||t.startsWith('[')){ try{ const j=JSON.parse(t); (Array.isArray(j)?j:[j]).forEach(x=>hallados.push(x)); }catch(e){} }
+  (t.match(/SISAT1:[A-Za-z0-9+\/=]+/g)||[]).forEach(c=>{ try{ hallados.push(JSON.parse(b64d(c.slice(7)))); }catch(e){ hallados.push(null); } });
+  let nuevos=0, reemp=0, malos=0;
+  hallados.forEach(x=>{ const r=limpia(x); if(!r){ malos++; return; } const k=keyR(r), i=ESC.findIndex(y=>keyR(y)===k); if(i>=0){ ESC[i]=r; reemp++; } else { ESC.push(r); nuevos++; } });
+  saveEsc();
+  return {nuevos,reemp,malos,total:hallados.length};
+}
+function msgImport(o){
+  if(!o.total) return 'No se encontró ningún resumen. Pegue los códigos que empiezan con SISAT1: o cargue los archivos recibidos.';
+  const p=(n,u)=>`${n} ${u}${n===1?'':'s'}`;
+  return `${p(o.nuevos,'grupo')} ${o.nuevos===1?'agregado':'agregados'}${o.reemp?`, ${o.reemp} ${o.reemp===1?'actualizado':'actualizados'}`:''}${o.malos?`, ${o.malos} no ${o.malos===1?'válido':'válidos'}`:''}.`;
+}
+async function leerArchivos(fl){
+  const tot={nuevos:0,reemp:0,malos:0,total:0};
+  for(const f of fl){ try{ const o=importar(await f.text()); Object.keys(tot).forEach(k=>{ tot[k]+=o[k]; }); }catch(e){} }
+  msg=msgImport(tot); render();
+}
+function copiar(texto,ok){
+  const fin=()=>{ msg=ok; codOut=''; render(); };
+  const fb=()=>{ codOut=texto; msg='No se pudo copiar automáticamente. Seleccione y copie el texto de abajo.'; render(); const t=document.getElementById('cod-out'); if(t){ t.focus(); t.select(); } };
+  try{ navigator.clipboard.writeText(texto).then(fin,fb); }catch(e){ fb(); }
+}
+
+// Datos agregados
+function aplsPresentes(){ return APLS.filter(x=>ESC.some(r=>r.apl===x)); }
+function escSel(){ const ap=aplsPresentes(); if(!ap.includes(escApl)) escApl=ap[ap.length-1]||''; return ESC.filter(r=>r.apl===escApl).sort((x,y)=>GORD(x.grado)-GORD(y.grado)||x.grupo.localeCompare(y.grupo)); }
+function agr(rs,k){ const d={e:0,d:0,r:0}; let n=0; rs.forEach(r=>{ n+=r[k].n; d.e+=r[k].d.e; d.d+=r[k].d.d; d.r+=r[k].d.r; }); return {n,d}; }
+function porGrado(rs,k){ return GRADOS.map(g=>{ const q=rs.filter(r=>r.grado===g); if(!q.length) return null; const a=agr(q,k); return {g,n:a.n,d:a.d,grupos:q.length}; }).filter(x=>x&&x.n); }
+function filas(rs){
+  return {
+    grados:GRADOS.map(g=>{ const q=rs.filter(r=>r.grado===g); if(!q.length) return null; return {label:g,sub:q.length+(q.length===1?' grupo':' grupos'),alum:q.reduce((x,r)=>x+r.alumnos,0),v:{l:agr(q,'l'),t:agr(q,'t'),c:agr(q,'c')}}; }).filter(Boolean),
+    grupos:rs.map(r=>({label:`${r.grado} ${r.grupo}`,sub:r.doc||'',alum:r.alumnos,v:{l:{n:r.l.n,d:r.l.d},t:{n:r.t.n,d:r.t.d},c:{n:r.c.n,d:r.c.d}}}))
+  };
+}
+function nombreEsc(rs){ const c={}; rs.forEach(r=>{ c[r.esc]=(c[r.esc]||0)+1; }); const e=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return e?e[0]:''; }
+function veredicto(d,n){
+  return d.e/n>0.5 ? 'Fortaleza de la escuela: más de la mitad del alumnado evaluado está en nivel esperado. Conviene mantener las prácticas que lo explican y atender con actividades diferenciadas a quienes están en amarillo o rojo.'
+    : 'Menos de la mitad del alumnado está en nivel esperado. Según el manual, cuando prevalecen el amarillo o el rojo la intervención requiere modificaciones sustanciales: la mayoría no se está beneficiando de la dinámica de trabajo cotidiana.';
+}
+function escInsights(rs){
+  const L=[], sk=['l','t','c'].filter(k=>agr(rs,k).n);
+  if(!sk.length) return ['Todavía no hay grupos con capturas completas.'];
+  const tot={}; sk.forEach(k=>{ tot[k]=agr(rs,k); });
+  const rojo=sk.map(k=>({k,p:pc(tot[k].d.r,tot[k].n)})).sort((a,b)=>b.p-a.p)[0];
+  L.push(rojo.p>0?`Habilidad de atención prioritaria: ${SK[rojo.k].name.toLowerCase()}, con ${rojo.p} % del alumnado evaluado en “requiere apoyo”.`:'Ningún alumno evaluado está en “requiere apoyo”.');
+  sk.forEach(k=>{
+    const t=tot[k];
+    L.push(`${SK[k].name}: ${pc(t.d.e,t.n)} % en nivel esperado, ${pc(t.d.d,t.n)} % en desarrollo y ${pc(t.d.r,t.n)} % requiere apoyo. `+(t.d.e/t.n>0.5?'Es una fortaleza de la escuela.':'Menos de la mitad está en nivel esperado.'));
+    const gr=porGrado(rs,k).map(x=>({g:x.g,pe:pc(x.d.e,x.n),pr:pc(x.d.r,x.n)}));
+    const dif=gr.filter(x=>x.pe<50).sort((a,b)=>a.pe-b.pe);
+    if(dif.length) L.push(`${SK[k].short}, grados con mayor desafío (menos de la mitad en nivel esperado): ${dif.map(x=>`${x.g} (${x.pe} %)`).join(', ')}.`);
+    const urg=gr.filter(x=>x.pr>=50);
+    if(urg.length) L.push(`${SK[k].short}, la mitad o más del grado requiere apoyo en: ${urg.map(x=>x.g).join(', ')}. Es el caso de atención más urgente.`);
+    if(k!=='c'){
+      const cs=SK[k].rub.map((c,i)=>({n:c.k,p:pc(rs.reduce((x,r)=>x+r[k].comp[i],0),3*t.n)})).sort((a,b)=>a.p-b.p);
+      L.push(`${SK[k].short}, componente con menor logro en la escuela: ${cs[0].n.toLowerCase()} (${cs[0].p} %), seguido de ${cs[1].n.toLowerCase()} (${cs[1].p} %).`);
+    } else {
+      const ok=rs.reduce((x,r)=>x+r.c.ok,0), vis=rs.reduce((x,r)=>x+r.c.vis,0);
+      L.push(`Cálculo mental: ${pc(ok,t.n*10)} % de respuestas correctas en la escuela`+(ok&&vis/ok>=0.5?'; la mitad o más fue con apoyo visual, conviene reforzar el cálculo con presentación verbal.':'.'));
+      const er={}; rs.forEach(r=>{ Object.keys(r.c.err).forEach(q=>{ er[q]=(er[q]||0)+r.c.err[q]; }); });
+      const nom={op:'no reconoció la operación',ix:'respuesta inexacta',tm:'tardó demasiado',ot:'otro',sin:'sin tipo registrado'}, qs=Object.keys(nom).filter(q=>er[q]);
+      if(qs.length) L.push(`Errores de cálculo registrados: ${qs.map(q=>`${nom[q]} (${er[q]})`).join(', ')}.`);
+    }
+  });
+  return L;
+}
+
+// Vistas
+function viewInicio(){
+  const g=S.g;
+  return `<div class="panel" style="max-width:640px;width:100%;margin:0 auto">
+    <h2>Antes de empezar</h2>
+    <ol class="steps small"><li>Cada docente captura a su grupo en este dispositivo.</li><li>Envía a la dirección un resumen del grupo: solo cifras, sin nombres de alumnos.</li><li>La dirección reúne los resúmenes y arma el concentrado de la escuela.</li></ol>
+    <label class="lbl">Escuela<input class="inp" id="i-escuela" value="${esc(g.escuela||'')}" placeholder="Nombre de la escuela" autocomplete="organization"></label>
+    <label class="lbl">Clave del centro de trabajo (opcional)<input class="inp" id="i-cct" value="${esc(g.cct||'')}" autocomplete="off"></label>
+    <label class="lbl">Docente (opcional)<input class="inp" id="i-doc" value="${esc(g.docente||'')}" autocomplete="name"></label>
+    <label class="lbl">Ciclo escolar<input class="inp" id="i-ciclo" value="${esc(g.ciclo||'')}"></label>
+    <p class="small warn" id="i-err" role="alert" hidden>Escriba el nombre de la escuela para continuar.</p>
+    <div class="rowflex"><button class="btn pri" data-a="ini" data-v="doc" data-k="ini-doc">Soy docente: capturar mi grupo</button><button class="btn" data-a="ini" data-v="dir" data-k="ini-dir">Soy director(a): armar el concentrado</button></div>
+    <p class="muted small">Escriba el nombre igual que sus compañeros para que el concentrado reconozca que son de la misma escuela. Puede cambiarlo después.</p></div>`;
+}
+function miniBar(d,n,h){
+  return n?`<div class="bar" style="height:${h||10}px;min-width:90px" role="img" aria-label="Esperado ${d.e}, en desarrollo ${d.d}, requiere apoyo ${d.r}">${['e','d','r'].map(l=>d[l]?`<div class="${l}" style="width:${d[l]/n*100}%"></div>`:'').join('')}</div>`:'<span class="muted small">Sin datos</span>';
+}
+function tablaDist(f,titulo,col){
+  return `<div class="panel"><h2>${titulo}</h2><div class="scroll"><table><thead><tr><th>${col}</th><th>Alumnos</th>${['l','t','c'].map(k=>`<th>${SK[k].short}</th>`).join('')}</tr></thead><tbody>${f.map(x=>`<tr><td><b>${esc(x.label)}</b>${x.sub?`<br><span class="muted small">${esc(x.sub)}</span>`:''}</td><td>${x.alum}</td>${['l','t','c'].map(k=>{ const v=x.v[k]; return `<td style="min-width:140px">${miniBar(v.d,v.n)}${v.n?`<span class="small">${pc(v.d.e,v.n)} % esperado · ${pc(v.d.r,v.n)} % apoyo</span>`:''}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+}
+function viewEscuela(){
+  const g=S.g, mine=!S.ej&&S.a.length>0, r0=mine?resumenGrupo():null;
+  const envio=`<div class="panel"><h2>Enviar el resumen de mi grupo</h2>
+    <p class="small">El resumen lleva solo cifras del grupo: niveles, porcentajes por componente y tipos de error. No incluye nombres de alumnos ni observaciones.</p>
+    <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <label class="lbl">Escuela<input class="inp" id="g-escuela" data-g="escuela" value="${esc(g.escuela||'')}"></label>
+      <label class="lbl">Clave CCT (opcional)<input class="inp" id="g-cct" data-g="cct" value="${esc(g.cct||'')}"></label>
+      <label class="lbl">Docente (opcional)<input class="inp" id="g-doc" data-g="docente" value="${esc(g.docente||'')}"></label></div>
+    ${r0?`<p class="small">Grupo <b>${esc(g.grado)} ${esc(g.grupo)}</b> · ${esc(g.apl)} aplicación · ${r0.alumnos} alumnos (capturas completas: lectura ${r0.l.n}, textos ${r0.t.n}, cálculo ${r0.c.n}).</p>
+      <div class="rowflex"><button class="btn pri" data-a="envcopy" data-k="envcopy">Copiar código para enviar</button>${dl?`<button class="btn" data-a="envdl" data-k="envdl">Descargar archivo</button>`:''}</div>
+      <p class="muted small">Pegue el código en un mensaje o correo a la dirección, o envíe el archivo. Si cambia sus capturas, genere y envíe uno nuevo: reemplaza al anterior.</p>`
+      :`<p class="muted small">${S.ej?'Ahora hay un alumno de ejemplo. ':''}Cuando capture a su grupo, aquí podrá copiar el código de envío.</p>`}</div>`;
+  const rs=escSel(), aps=aplsPresentes();
+  const orden=ESC.map((r,i)=>({r,i})).sort((x,y)=>APLS.indexOf(x.r.apl)-APLS.indexOf(y.r.apl)||GORD(x.r.grado)-GORD(y.r.grado)||x.r.grupo.localeCompare(y.r.grupo));
+  const escs=[...new Set(ESC.map(r=>r.esc))];
+  const distintas=new Set(ESC.map(r=>norm(r.esc))).size>1, ciclos=new Set(rs.map(r=>norm(r.ciclo))).size>1;
+  const lista=ESC.length?`<div class="scroll"><table><thead><tr><th>Grupo</th><th>Docente</th><th>Aplicación</th><th>Alumnos</th><th>Fecha</th><th></th></tr></thead><tbody>${orden.map(({r,i})=>`<tr><td><b>${esc(r.grado)} ${esc(r.grupo)}</b></td><td>${esc(r.doc||'—')}</td><td>${esc(r.apl)}</td><td>${r.alumnos}</td><td class="small">${esc(r.fecha)}</td><td style="text-align:right"><button class="btn" data-a="escdel" data-v="${i}" data-k="escdel-${i}" aria-label="Quitar ${esc(r.grado)} ${esc(r.grupo)}">Quitar</button></td></tr>`).join('')}</tbody></table></div>
+    ${distintas?`<p class="warn small">Los resúmenes mencionan escuelas distintas: ${escs.map(x=>esc(x)).join('; ')}. Revise que todos sean de la misma escuela.</p>`:''}
+    ${ciclos?`<p class="warn small">Los grupos de esta aplicación son de ciclos escolares distintos. Revise que no haya resúmenes de otro ciclo.</p>`:''}
+    <div class="rowflex">${confirmEsc?`<button class="btn danger" data-a="escclear" data-k="escclear">Sí, quitar todos</button><button class="btn" data-a="noclr" data-k="noclr">Cancelar</button>`:`<button class="btn danger" data-a="askclr" data-k="askclr">Quitar todos los resúmenes</button>`}</div>`:'';
+  const dir=`<div class="panel"><h2>Concentrado de la escuela</h2>
+    <p class="small">Reúna los resúmenes de todos los grupos. Pegue los códigos que envíen los docentes, uno por línea o todos juntos, o cargue los archivos recibidos.</p>
+    <textarea id="esc-txt" aria-label="Códigos de resumen" placeholder="SISAT1:…" style="min-height:90px"></textarea>
+    <div class="rowflex"><button class="btn pri" data-a="escadd" data-k="escadd">Agregar códigos</button><button class="btn" data-a="escfile" data-k="escfile">Cargar archivos</button><input id="escfile" type="file" accept=".json,.txt,text/plain,application/json" multiple hidden data-escfile="1" aria-label="Archivos de resumen">${r0?`<button class="btn" data-a="escmine" data-k="escmine">Agregar mi grupo</button>`:''}</div>
+    ${msg?`<p class="small" role="status">${esc(msg)}</p>`:''}
+    ${codOut?`<textarea id="cod-out" readonly aria-label="Texto para copiar" style="min-height:90px">${esc(codOut)}</textarea>`:''}
+    ${lista}</div>`;
+  let conc='';
+  if(rs.length){
+    const alum=rs.reduce((x,r)=>x+r.alumnos,0), ap=rs.reduce((x,r)=>x+r.ap,0), ap3=rs.reduce((x,r)=>x+r.ap3,0), f=filas(rs), ins=escInsights(rs);
+    const sem=['l','t','c'].map(k=>{
+      const t=agr(rs,k), head=`<h2 class="hic ev-${k}">${ICON[k]}${SK[k].name}</h2>`;
+      if(!t.n) return `<div class="panel">${head}<p class="muted">Sin capturas completas.</p></div>`;
+      return `<div class="panel">${head}${miniBar(t.d,t.n,22)}<div class="legend">${['e','d','r'].map(l=>`<span class="pill ${l}"><i></i>${LV[l]}: ${t.d[l]} (${pc(t.d[l],t.n)} %)</span>`).join('')}</div><p class="small">${veredicto(t.d,t.n)}</p><p class="muted small">${t.n} alumnos evaluados en ${rs.filter(r=>r[k].n).length} ${rs.filter(r=>r[k].n).length===1?'grupo':'grupos'}.</p></div>`;
+    }).join('');
+    const filtro=aps.length>1?`<label class="lbl" style="min-width:10rem">Aplicación<select class="inp" id="eapl" data-eapl="1">${aps.map(x=>`<option${x===escApl?' selected':''}>${x}</option>`).join('')}</select></label>`:`<span class="pill n">${esc(escApl)} aplicación</span>`;
+    conc=`<div class="panel"><div class="skillhead"><h2>Escuela: ${esc(nombreEsc(rs))}</h2>${filtro}</div>
+        <p class="small">${rs.length} ${rs.length===1?'grupo':'grupos'} · ${alum} alumnos registrados · ${ap} (${pc(ap,alum)} %) con al menos una habilidad en “requiere apoyo” · ${ap3} en las tres.</p></div>
+      <div class="grid3">${sem}</div>
+      ${tablaDist(f.grados,'Por grado','Grado')}${tablaDist(f.grupos,'Por grupo','Grupo')}
+      <div class="panel"><h2>Qué dicen los resultados</h2>
+        <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">${ins.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+        <div class="rowflex">${dl?`<button class="btn pri" data-a="escpdf" data-k="escpdf">Descargar concentrado en PDF</button>`:''}<button class="btn" data-a="esccopy" data-k="esccopy">Copiar como texto</button></div>
+        <p class="small" id="escmsg" role="status"></p></div>
+      <div class="panel"><h2>Preguntas para el Consejo Técnico Escolar</h2><ol class="steps">
+        <li>Fortalezas y áreas de oportunidad por grupo: ¿qué demanda atención prioritaria?</li>
+        <li>Alumnos que requieren apoyo: ¿cuáles son sus necesidades y áreas de oportunidad?</li>
+        <li>Logros y desafíos como escuela: ¿cuáles son nuestras problemáticas educativas?</li>
+        <li>¿Qué prácticas docentes y escolares favorecen, o no, el logro de resultados?</li>
+        <li>¿Cómo lograremos superar nuestras problemáticas educativas?</li></ol></div>`;
+  }
+  return `<div style="display:flex;flex-direction:column;gap:16px">${envio}${dir}${conc}</div>`;
+}
+
+// Texto y PDF del concentrado
+function escTexto(rs){
+  const f=filas(rs), L=['CONCENTRADO DE ESCUELA · SisAT', nombreEsc(rs), `${(rs.find(r=>r.cct)||{}).cct?'CCT '+rs.find(r=>r.cct).cct+' · ':''}Ciclo ${rs[0].ciclo} · ${escApl} aplicación · ${rs.length} grupos · ${rs.reduce((x,r)=>x+r.alumnos,0)} alumnos · ${hoy()}`,''];
+  ['l','t','c'].forEach(k=>{
+    const t=agr(rs,k); L.push(SK[k].name.toUpperCase());
+    if(!t.n){ L.push('Sin capturas completas.',''); return; }
+    L.push(`Escuela: ${LV.e} ${t.d.e} (${pc(t.d.e,t.n)} %) · ${LV.d} ${t.d.d} (${pc(t.d.d,t.n)} %) · ${LV.r} ${t.d.r} (${pc(t.d.r,t.n)} %)`);
+    f.grados.forEach(x=>{ const v=x.v[k]; if(v.n) L.push(`  ${x.label}: ${pc(v.d.e,v.n)} % esperado, ${pc(v.d.d,v.n)} % en desarrollo, ${pc(v.d.r,v.n)} % requiere apoyo (${v.n} alumnos)`); });
+    L.push('');
+  });
+  L.push('QUÉ DICEN LOS RESULTADOS'); escInsights(rs).forEach(x=>L.push('- '+x));
+  return L.join('\n');
+}
+function pdfEscuela(rs){
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'letter'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=16, INK=[23,32,58], GRAY=[86,96,128], COL={e:[46,158,104],d:[223,166,38],r:[212,72,63]};
+  let y=M;
+  const clean=s=>String(s==null?'':s).replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,'...').replace(/[–—−]/g,'-').replace(/→/g,'>').replace(/[^\x20-\x7E\xA0-\xFF\n]/g,'');
+  const need=h=>{ if(y+h>H-M){ doc.addPage(); y=M; } };
+  const text=(s,o)=>{ o=o||{}; const size=o.size||10, lh=size*0.45, x=M+(o.x||0);
+    doc.setFont('helvetica',o.b?'bold':'normal'); doc.setFontSize(size); doc.setTextColor.apply(doc,o.color||INK);
+    doc.splitTextToSize(clean(s),W-M-x).forEach(l=>{ need(lh); doc.text(l,x,y+lh*0.8); y+=lh; }); y+=o.gap==null?1.5:o.gap; };
+  const bar=(d,n,x,w,h)=>{ doc.setFillColor(233,237,245); doc.rect(x,y,w,h,'F'); let cx=x; ['e','d','r'].forEach(l=>{ if(d[l]&&n){ const ww=w*d[l]/n; doc.setFillColor.apply(doc,COL[l]); doc.rect(cx,y,ww,h,'F'); cx+=ww; } }); };
+  const alum=rs.reduce((x,r)=>x+r.alumnos,0), ap=rs.reduce((x,r)=>x+r.ap,0), ap3=rs.reduce((x,r)=>x+r.ap3,0), f=filas(rs), cct=(rs.find(r=>r.cct)||{}).cct;
+  text('Concentrado de escuela SisAT',{size:9,color:GRAY,gap:1});
+  text(nombreEsc(rs),{size:18,b:true,gap:1});
+  text(`${cct?'CCT '+cct+' · ':''}Ciclo ${rs[0].ciclo} · ${escApl} aplicación · ${rs.length} ${rs.length===1?'grupo':'grupos'} · ${hoy()}`,{size:9,color:GRAY,gap:3});
+  text(`${alum} alumnos registrados. ${ap} (${pc(ap,alum)} %) tienen al menos una habilidad en "requiere apoyo"; ${ap3} en las tres.`,{gap:3});
+  ['l','t','c'].forEach(k=>{
+    const t=agr(rs,k); need(40); doc.setDrawColor(214,220,234); doc.line(M,y,W-M,y); y+=4;
+    text(SK[k].name,{size:13,b:true,gap:1.5});
+    if(!t.n){ text('Sin capturas completas.',{color:GRAY}); return; }
+    bar(t.d,t.n,M,W-2*M,6); y+=8;
+    text(`${LV.e}: ${t.d.e} (${pc(t.d.e,t.n)} %) · ${LV.d}: ${t.d.d} (${pc(t.d.d,t.n)} %) · ${LV.r}: ${t.d.r} (${pc(t.d.r,t.n)} %)`,{size:9});
+    text(veredicto(t.d,t.n),{size:9,gap:3});
+    const fila=(label,v,b)=>{ need(6.5); doc.setFont('helvetica',b?'bold':'normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,INK);
+      doc.text(clean(label),M,y+3.6); doc.text(String(v.n),M+44,y+3.6,{align:'right'});
+      if(v.n){ y+=0.6; bar(v.d,v.n,M+50,62,3.4); y-=0.6; doc.setFont('helvetica','normal'); doc.text(`${pc(v.d.e,v.n)} % esperado · ${pc(v.d.r,v.n)} % apoyo`,M+116,y+3.6); } else { doc.setTextColor.apply(doc,GRAY); doc.text('Sin datos',M+50,y+3.6); }
+      y+=6; };
+    text('Por grado',{size:10,b:true,gap:0.5});
+    f.grados.forEach(x=>{ const v=x.v[k]; if(v.n) fila(x.label,v,true); });
+    if(rs.length>1){ y+=2; text('Por grupo',{size:10,b:true,gap:0.5}); f.grupos.forEach(x=>{ const v=x.v[k]; if(v.n) fila(x.label+(x.sub?' ('+x.sub+')':''),v,false); }); }
+    y+=2;
+  });
+  need(30); doc.setDrawColor(214,220,234); doc.line(M,y,W-M,y); y+=4;
+  text('Qué dicen los resultados',{size:13,b:true,gap:1.5});
+  escInsights(rs).forEach(x=>text('- '+x,{x:3,size:9,gap:1}));
+  y+=3; text('Resultados de las rúbricas del SisAT (SEP, 2018), reunidos a partir de los resúmenes enviados por los docentes. Describen habilidades básicas; no son calificaciones.',{size:8,color:GRAY});
+  return doc;
+}
 // ---------- Informe individual ----------
 let dl=null;
 dl={save:({filename,data})=>new Promise(res=>{ const b=data instanceof Blob?data:new Blob([data]); const u=URL.createObjectURL(b), el=document.createElement('a'); el.href=u; el.download=filename; document.body.appendChild(el); el.click(); el.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000); res({status:'saved'}); })};
@@ -707,10 +942,11 @@ function viewDatos(){
 }
 function render(){
   const k=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.k:null;
-  const bk=document.getElementById('bk'), bkv=bk?bk.value:'';
-  renderTabs();
-  document.getElementById('view').innerHTML= tab==='grupo'?viewResumen(): tab==='datos'?viewDatos(): tab==='informe'?viewInforme(): viewSkill(tab);
+  const bk=document.getElementById('bk'), bkv=bk?bk.value:''; const et=document.getElementById('esc-txt'), etv=et?et.value:'';
+  renderTabs(); { const hf=document.getElementById('fields'); if(hf) hf.hidden=!S.g.ini; }
+  document.getElementById('view').innerHTML= !S.g.ini?viewInicio(): tab==='grupo'?viewResumen(): tab==='escuela'?viewEscuela(): tab==='datos'?viewDatos(): tab==='informe'?viewInforme(): viewSkill(tab);
   if(bkv&&document.getElementById('bk')) document.getElementById('bk').value=bkv;
+  if(etv&&document.getElementById('esc-txt')) document.getElementById('esc-txt').value=etv;
   mountAudio();
   if(k){ const el=document.querySelector(`[data-k="${k}"]`); if(el) el.focus({preventScroll:true}); }
 }
@@ -739,6 +975,25 @@ document.addEventListener('click',ev=>{
   else if(act==='repcopy'&&a){ const say=t=>{ const m=document.getElementById('repmsg'); if(m) m.textContent=t; };
     const fb=()=>{ const r=document.getElementById('rep'); if(r){ const rg=document.createRange(); rg.selectNodeContents(r); const s=getSelection(); s.removeAllRanges(); s.addRange(rg); } say('No se pudo copiar automáticamente: el informe quedó seleccionado, cópielo con Ctrl+C.'); };
     try{ navigator.clipboard.writeText(informeTexto(a)).then(()=>say('Informe copiado. Péguelo en un documento, correo o mensaje.'),fb); }catch(e){ fb(); } }
+  else if(act==='ini'){ const gv=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+    const nombre=gv('i-escuela'); if(!nombre){ const em=document.getElementById('i-err'); if(em) em.hidden=false; const fe=document.getElementById('i-escuela'); if(fe) fe.focus(); return; }
+    S.g.escuela=nombre; S.g.cct=gv('i-cct'); S.g.docente=gv('i-doc'); if(gv('i-ciclo')) S.g.ciclo=gv('i-ciclo'); S.g.ini=true;
+    tab=b.dataset.v==='dir'?'escuela':'grupo'; renderFields(); touch(); }
+  else if(act==='envcopy'){ if(S.ej||!S.a.length){ msg='Capture primero a su grupo.'; render(); return; } copiar(codigoDe(resumenGrupo()),'Código copiado. Péguelo en un mensaje o correo a la dirección.'); }
+  else if(act==='envdl'&&dl){ if(S.ej||!S.a.length){ msg='Capture primero a su grupo.'; render(); return; }
+    dl.save({filename:('Resumen SisAT - '+S.g.grado+' '+S.g.grupo+'.json').replace(/[\\/:*?"<>|]/g,''),data:JSON.stringify(resumenGrupo(),null,1)}).then(()=>{ msg='Archivo guardado. Envíelo a la dirección.'; render(); },err=>{ if(!err||err.code!=='declined'){ msg='No se pudo guardar el archivo. Use “Copiar código para enviar”.'; render(); } }); }
+  else if(act==='escadd'){ const te=document.getElementById('esc-txt'); const o=importar(te?te.value:''); msg=msgImport(o); if(o.nuevos+o.reemp&&te) te.value=''; render(); }
+  else if(act==='escfile'){ const fi=document.getElementById('escfile'); if(fi) fi.click(); }
+  else if(act==='escmine'){ if(S.ej||!S.a.length){ msg='Capture primero a su grupo.'; render(); return; } msg=msgImport(importar(JSON.stringify(resumenGrupo()))); render(); }
+  else if(act==='escdel'){ ESC.splice(+b.dataset.v,1); saveEsc(); render(); }
+  else if(act==='askclr'){ confirmEsc=true; render(); }
+  else if(act==='noclr'){ confirmEsc=false; render(); }
+  else if(act==='escclear'){ ESC=[]; saveEsc(); confirmEsc=false; msg='Se quitaron todos los resúmenes.'; render(); }
+  else if(act==='esccopy'){ const rs=escSel(); if(rs.length) copiar(escTexto(rs),'Concentrado copiado como texto.'); }
+  else if(act==='escpdf'&&dl){ const rs=escSel(); const say=t=>{ const m=document.getElementById('escmsg'); if(m) m.textContent=t; }; if(!rs.length) return;
+    if(!window.jspdf){ say('No se pudo cargar el generador de PDF.'); return; }
+    let pb; try{ pb=pdfEscuela(rs).output('blob'); }catch(e){ say('No se pudo generar el PDF.'); return; }
+    dl.save({filename:('Concentrado SisAT - '+nombreEsc(rs)+' - '+escApl+' aplicacion.pdf').replace(/[\\/:*?"<>|]/g,''),data:pb}).then(()=>say('PDF guardado. Ya puede imprimirlo o enviarlo.'),err=>{ if(!err||err.code!=='declined') say('No se pudo guardar el PDF en esta vista.'); }); }
   else if(act==='tstart'&&a){ iniciarLectura(a); }
   else if(act==='tstop'&&tm){ detenerLectura(); }
   else if(act==='treset'&&a){ a.s=0; touch(); }
@@ -775,8 +1030,10 @@ document.addEventListener('submit',ev=>{
 });
 document.addEventListener('change',ev=>{
   const t=ev.target, a=S.a.find(x=>x.id===sel);
-  if(t.dataset.g){ S.g[t.dataset.g]=t.value; touch(); }
+  if(t.dataset.g){ S.g[t.dataset.g]=t.value; if(t.dataset.g==='escuela') renderFields(); touch(); }
   else if(t.dataset.n&&a){ a.n=t.value.trim()||a.n; touch(); }
+  else if(t.dataset.escfile){ const fl=Array.from(t.files||[]); t.value=''; leerArchivos(fl); }
+  else if(t.dataset.eapl){ escApl=t.value; render(); }
   else if(t.dataset.grab){ grabar=t.checked; }
   else if(t.dataset.rep){ sel=+t.value; render(); }
   else if((t.dataset.et||t.dataset.er)&&a){ const i=+(t.dataset.et||t.dataset.er); a.ce=a.ce||[]; a.ce[i]=Object.assign({},a.ce[i],t.dataset.et?{t:t.value}:{r:t.value.trim()}); if(t.dataset.et) touch(); else save(); }

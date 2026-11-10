@@ -1,6 +1,6 @@
 // Servicio sin conexión de Captura SisAT.
 // Para publicar una versión nueva, suba los archivos y cambie el número de VERSION.
-const VERSION = 'sisat-v1';
+const VERSION = 'sisat-v2';
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'vendor/jspdf.umd.min.js'];
 
 self.addEventListener('install', e => {
