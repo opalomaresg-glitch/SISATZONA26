@@ -1,0 +1,730 @@
+<title>Captura SisAT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: encabezado con datos del grupo, pestañas, y dos columnas (lista del grupo + ficha del alumno) que se apilan en teléfono. */
+:root{
+  --bg:#f2f4f9; --surface:#ffffff; --sunk:#e9edf5; --ink:#17203a; --muted:#566080; --line:#d6dcea;
+  --accent:#2b4acb; --accent-soft:#e5eafc; --on-accent:#ffffff;
+  --ok:#17693f; --ok-bg:#dcf2e5; --ok-fill:#2e9e68;
+  --warn:#7a5500; --warn-bg:#fcecbd; --warn-fill:#dfa626;
+  --bad:#a8231c; --bad-bg:#fbdfdc; --bad-fill:#d4483f;
+  --lec:#2b4acb; --lec-bg:#e5eafc; --txt:#7a3fb8; --txt-bg:#f0e6fb; --cal:#0f7480; --cal-bg:#dcf1f3;
+  --display:"Bricolage Grotesque","Figtree",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f131e; --surface:#181e2d; --sunk:#121724; --ink:#e8ecf7; --muted:#9aa5c2; --line:#2c3552;
+  --accent:#93a8ff; --accent-soft:#222c52; --on-accent:#0f1530;
+  --ok:#7ad9a6; --ok-bg:#163424; --ok-fill:#2e9e68;
+  --warn:#f1c75e; --warn-bg:#3a2e0c; --warn-fill:#dfa626;
+  --bad:#ff958c; --bad-bg:#431a1a; --bad-fill:#d4483f;
+  --lec:#93a8ff; --lec-bg:#222c52; --txt:#c9a2f5; --txt-bg:#33224d; --cal:#6fd0dc; --cal-bg:#12363b;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f131e; --surface:#181e2d; --sunk:#121724; --ink:#e8ecf7; --muted:#9aa5c2; --line:#2c3552;
+  --accent:#93a8ff; --accent-soft:#222c52; --on-accent:#0f1530;
+  --ok:#7ad9a6; --ok-bg:#163424; --ok-fill:#2e9e68;
+  --warn:#f1c75e; --warn-bg:#3a2e0c; --warn-fill:#dfa626;
+  --bad:#ff958c; --bad-bg:#431a1a; --bad-fill:#d4483f;
+  --lec:#93a8ff; --lec-bg:#222c52; --txt:#c9a2f5; --txt-bg:#33224d; --cal:#6fd0dc; --cal-bg:#12363b;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.7rem} h2{font-size:1.2rem} h3{font-size:1rem}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.fields{display:flex;flex-wrap:wrap;gap:8px}
+.fields label{display:flex;flex-direction:column;gap:2px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.fields input,.fields select,.inp{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:.95rem;min-width:0}
+.fields input{width:9.5rem} .fields input.sm{width:5rem}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs button{background:none;border:0;padding:9px 14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.note{background:var(--accent-soft);border-radius:var(--r);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--bad)}
+.cols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer} tr.row:hover td{background:var(--sunk)}
+tr.sel td{background:var(--accent-soft)}
+.rowbtn{background:none;border:0;padding:0;font-weight:600;text-align:left;cursor:pointer}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pill.e{background:var(--ok-bg);color:var(--ok)} .pill.e i{background:var(--ok-fill)}
+.pill.d{background:var(--warn-bg);color:var(--warn)} .pill.d i{background:var(--warn-fill);border-radius:2px}
+.pill.r{background:var(--bad-bg);color:var(--bad)} .pill.r i{background:var(--bad-fill);border-radius:0;transform:rotate(45deg)}
+.pill.n{background:var(--sunk);color:var(--muted)}
+.addrow{display:flex;gap:8px} .addrow input{flex:1}
+.skill{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.skillhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.comp{display:flex;flex-direction:column;gap:5px}
+.comp .cn{font-weight:600;font-size:.9rem}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+@media (max-width:520px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;text-align:left;cursor:pointer;display:flex;gap:8px;align-items:baseline;font-size:.86rem;line-height:1.25}
+.opt b{font-family:var(--display);font-size:1rem}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-pressed="true"]{border-color:transparent;font-weight:600}
+.opt.v3[aria-pressed="true"]{background:var(--ok-bg);color:var(--ok)}
+.opt.v2[aria-pressed="true"]{background:var(--warn-bg);color:var(--warn)}
+.opt.v1[aria-pressed="true"]{background:var(--bad-bg);color:var(--bad)}
+details{font-size:.84rem;color:var(--muted)} summary{cursor:pointer}
+details ul{margin:4px 0 0;padding-left:18px} details .dl{margin-top:6px;font-weight:600;color:var(--ink)}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.q{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:5px 7px}
+.q span{font-weight:700;width:1.6rem;font-variant-numeric:tabular-nums}
+.q button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 0;cursor:pointer;font-weight:700}
+.q button[aria-pressed="true"].c{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.q button[aria-pressed="true"].v{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.q button[aria-pressed="true"].x{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+.interp{background:var(--sunk);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--sunk)}
+.bar div{min-width:0} .bar .e{background:var(--ok-fill)} .bar .d{background:var(--warn-fill)} .bar .r{background:var(--bad-fill)}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.meter{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;min-width:70px}
+.meter div{height:100%}
+.meter .e{background:var(--ok-fill)} .meter .d{background:var(--warn-fill)} .meter .r{background:var(--bad-fill)}
+ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+textarea{width:100%;min-height:120px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:.8rem}
+.rowflex{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ev-l{--c:var(--lec);--cb:var(--lec-bg)} .ev-t{--c:var(--txt);--cb:var(--txt-bg)} .ev-c{--c:var(--cal);--cb:var(--cal-bg)}
+.evs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ev{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;cursor:pointer;text-align:left;min-width:0}
+.ev:hover{border-color:var(--c)}
+.ev[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);background:var(--cb)}
+.ev .pill{white-space:normal}
+.evh{display:flex;align-items:center;gap:6px;color:var(--c)}
+.hic{display:flex;align-items:center;gap:8px} .hic svg{color:var(--c);flex:none}
+.prof{display:flex;gap:4px;width:100%}
+.pc{flex:1;display:flex;flex-direction:column;gap:2px;align-items:center;font-size:.68rem;color:var(--muted);min-width:0}
+.seg{display:block;width:100%;height:7px;border-radius:2px;background:var(--line)}
+.seg.s3{background:var(--ok-fill)} .seg.s2{background:var(--warn-fill)} .seg.s1{background:var(--bad-fill)}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:100%}
+.strip i{height:14px;border-radius:2px;background:var(--line)}
+.strip i.c{background:var(--ok-fill)} .strip i.v{background:var(--ok-fill);opacity:.5} .strip i.x{background:var(--bad-fill)}
+.guide{background:var(--cb);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.guide .gh{display:flex;gap:10px;align-items:center;color:var(--c)}
+.guide details{color:var(--ink)} .guide ol{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.flow{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.8rem}
+.flow span{background:var(--surface);border-radius:6px;padding:3px 8px} .flow b{color:var(--c)}
+.pcalc{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--sunk);border-radius:8px;padding:8px 10px;font-size:.86rem}
+.pcalc input{width:5rem;margin-left:4px}
+.hc{text-align:center;font-weight:700;font-size:.8rem;width:2rem}
+.hc.h3{background:var(--ok-bg);color:var(--ok)} .hc.h2{background:var(--warn-bg);color:var(--warn)} .hc.h1{background:var(--bad-bg);color:var(--bad)} .hc.hv{background:var(--accent-soft);color:var(--accent)}
+.tabs button{display:inline-flex;align-items:center;gap:6px}
+.tabs button svg{width:18px;height:18px}
+.tabs button[class^="ev-"][aria-selected="true"]{color:var(--c);border-bottom-color:var(--c)}
+.space{display:flex;flex-direction:column;gap:16px}
+.space .guide h2{color:var(--c)}
+.fluid{background:var(--cb);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.clock{font-family:var(--display);font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:6rem;color:var(--c)}
+.qlist{display:flex;flex-direction:column;gap:6px}
+.qrow{border:1px solid var(--line);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:6px}
+.qmain{display:flex;align-items:center;gap:8px}
+.qn{font-weight:700;width:1.5rem;flex:none;font-variant-numeric:tabular-nums}
+.qt{flex:1;min-width:0}
+.qb{display:flex;gap:4px;flex:none}
+.qb button{width:2.3rem;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 0;cursor:pointer;font-weight:700}
+.qb button[aria-pressed="true"].c{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.qb button[aria-pressed="true"].v{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.qb button[aria-pressed="true"].x{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+.qerr{display:flex;flex-wrap:wrap;gap:6px;padding-left:2rem}
+.qerr select{flex:2;min-width:12rem} .qerr input{flex:1;min-width:8rem}
+.pqs{color:var(--ink)} .pqrow{display:flex;gap:6px;align-items:center;margin-top:6px}
+.pqrow input:first-of-type{flex:3;min-width:0} .pqrow input:last-of-type{flex:1;min-width:0}
+.interp ul{margin:4px 0;padding-left:18px}
+.rep{display:flex;flex-direction:column;gap:16px}
+.rep .ev{cursor:default} .rep .ev:hover{border-color:var(--line)}
+.rep ul{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.rs{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+footer{font-size:.82rem;color:var(--muted);max-width:75ch}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Captura SisAT</h1>
+      <p class="muted">Lectura, producción de textos escritos y cálculo mental: registro por alumno e interpretación del grupo.</p>
+    </div>
+    <div class="fields" id="fields"></div>
+  </div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="view"></div>
+  <footer>Rúbricas, rangos y criterios de interpretación tomados del manual de la SEP “Exploración de habilidades básicas en lectura, producción de textos escritos y cálculo mental. Herramienta para la escuela” (2018). Los datos se guardan solo en este navegador; use la pestaña Datos para respaldarlos.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// ---------- Rúbricas oficiales (SEP, 2018) ----------
+const LEC = [
+  {k:'Fluidez', o:[
+    ['La lectura es fluida',['1.º y 2.º: lee palabras completas y respeta la palabra como unidad.','Lee frases completas.','Lee con ritmo.','Respeta los signos de puntuación.']],
+    ['Medianamente fluida',['1.º y 2.º: lectura silábica, no respeta la palabra como unidad.','Lee agrupando dos o tres palabras.','Presenta indecisiones o repeticiones al leer.','Respeta solo algunos signos de puntuación.']],
+    ['No hay fluidez',['1.º y 2.º: reconoce solo algunas letras o sílabas aisladamente.','Presenta errores y pausas que hacen poco entendible la lectura.','Lee sílaba por sílaba o palabra a palabra.']]]},
+  {k:'Precisión', o:[
+    ['Precisión en la lectura',['Lee correctamente las palabras; comete solo 2 o 3 % de errores.','No incorpora, sustituye ni omite palabras.']],
+    ['Precisión moderada',['Presenta entre 4 y 6 % de errores en las palabras (agrega, sustituye, omite o invierte sílabas o palabras).']],
+    ['Falta de precisión',['Tiene más de 6 % de errores en las palabras (agrega, omite o sustituye).','Invierte sílabas o palabras.']]]},
+  {k:'Palabras complejas', o:[
+    ['Atención ante palabras complejas',['Lee pausadamente las palabras desconocidas o complejas a fin de no equivocarse.']],
+    ['Atención en algunas, que corrige',['Se detiene en algunas palabras complejas.','Corrige algunas de ellas en las que se equivoca.']],
+    ['Sin atención en palabras complejas',['Se equivoca, no corrige o lo hace de manera inadecuada y continúa leyendo.']]]},
+  {k:'Uso de la voz', o:[
+    ['Uso adecuado de la voz',['Da la entonación y el volumen apropiados al leer.','Da la dicción adecuada en cada palabra.']],
+    ['Uso inconsistente de la voz',['Da entonación y volumen apropiados solo en algunas partes de la lectura.','Presenta algunos errores de dicción.']],
+    ['Manejo inadecuado de la voz',['Lee de manera monótona o inaudible.','Presenta mala dicción de las palabras.']]]},
+  {k:'Seguridad y disposición', o:[
+    ['Seguridad y disposición',['Manifiesta disposición y seguridad al leer.','Disfruta la lectura.']],
+    ['Seguridad limitada y esfuerzo',['Muestra rasgos de tensión, pero no interfieren con su lectura.','El texto no le es fácil, pero puede manejarlo.']],
+    ['Inseguridad o indiferencia',['Muestra inseguridad ante la lectura, lo que interfiere en su desempeño.','Se observa apatía o desinterés.']]]},
+  {k:'Comprensión', o:[
+    ['Comprensión general',['Identifica las ideas o detalles relevantes (en 1.º y 2.º considerar solo esto).','Reconoce personajes, escenarios o resolución del tema.','El recuerdo está organizado siguiendo el texto.']],
+    ['Comprensión parcial',['Identifica solo alguna idea o detalles del texto (en 1.º y 2.º considerar únicamente esto).','Recuperación incompleta de detalles.','Enuncia el contenido desorganizadamente.']],
+    ['Comprensión deficiente',['No identifica ninguna idea ni detalles.','Menciona frases o enunciados sin relación entre sí.','Expresa un contenido ajeno a lo leído.']]]}
+];
+const TXT = [
+  {k:'Legibilidad', o:[
+    ['Es legible',['1.º y 2.º: escribe las palabras correctamente; en oraciones separa las palabras.','Hay separación correcta de palabras.','Trazo correcto de las letras.']],
+    ['Medianamente legible',['1.º y 2.º: algunos errores de sustitución, omisión o adición de letras o sílabas; no separa algunas palabras.','Algunos errores en la separación de palabras (ej.: “a probar” por “aprobar”; “megusta”).','El trazo de las letras dificulta la lectura de palabras.']],
+    ['No se puede leer',['1.º y 2.º: escritura prealfabética (letras o sílabas que no forman palabras); no separa la mayoría de las palabras.','No existe separación entre palabras o es incorrecta.','El trazo de las letras impide la lectura del texto.']]]},
+  {k:'Propósito comunicativo', o:[
+    ['Cumple su propósito',['Se comprenden las ideas expuestas en el texto.','Está organizado y cumple la intención del tipo de texto requerido.']],
+    ['Lo cumple parcialmente',['Se comprende parcialmente el mensaje, con algunas ideas incompletas o mezcladas.','Falta algún componente (ej.: título, final, firma en carta).']],
+    ['No lo cumple',['No hay claridad en el mensaje; pierde secuencia o cambia de tema.','No presenta la organización correspondiente al tipo de texto requerido.']]]},
+  {k:'Relación entre palabras y oraciones', o:[
+    ['Relación adecuada',['Empleo correcto de los tiempos verbales, género y número.','Uso de palabras y expresiones variadas para relacionar oraciones.']],
+    ['No relaciona algunas',['Dos o más errores en los tiempos verbales, el género o el número.','Uso limitado de palabras y expresiones para vincular oraciones.']],
+    ['No relaciona',['Empleo inadecuado de los tiempos verbales, el género y el número.','No hay vinculación entre oraciones.']]]},
+  {k:'Vocabulario', o:[
+    ['Vocabulario diverso',['El vocabulario es rico y variado.','Usa vocabulario adecuado a la situación comunicativa.']],
+    ['Uso limitado',['Uso limitado o repetitivo de palabras.','Algunas palabras no corresponden a la situación que se intenta comunicar.']],
+    ['Escaso o no pertinente',['Producción reducida de texto.','Las palabras no corresponden a la situación comunicativa.']]]},
+  {k:'Signos de puntuación', o:[
+    ['Usa los signos',['1.º y 2.º: punto final y coma.','3.º a 6.º: usa tres o más signos de puntuación requeridos (interrogación, admiración, comillas…).']],
+    ['Usa algunos signos',['Utiliza los signos requeridos con algunas omisiones en su aplicación.']],
+    ['No los utiliza',['No utiliza los signos de puntuación o lo hace de manera equivocada a lo largo del texto.']]]},
+  {k:'Ortografía', o:[
+    ['Ortografía correcta',['1.º y 2.º: uso de mayúsculas.','Uso correcto de las letras que representan un mismo sonido.','Acentuación correcta de palabras.']],
+    ['Usa algunas reglas',['1.º y 2.º: dos o tres errores u omisiones.','Algunos errores en letras que representan un mismo sonido, en palabras poco comunes.','Algunos errores en la acentuación de palabras comunes.']],
+    ['No respeta las reglas',['1.º y 2.º: no distingue el uso de mayúsculas.','Errores incluso en las palabras comunes.','No utiliza acentos ni en palabras comunes.']]]}
+];
+const SK = {
+  l:{name:'Lectura', short:'Lectura', rub:LEC, max:18,
+     txt:{e:'Lee de forma adecuada según lo esperado para su grado, con buen nivel de comprensión, lo que favorece su seguridad y disposición al leer.',
+          d:'Presenta algunas características esperadas para su grado junto con rasgos de un nivel anterior; su desempeño es inconsistente (por ejemplo, lectura fluida pero monótona o con mala comprensión de las ideas clave).',
+          r:'La lectura no es fluida y la comprensión es deficiente; muestra inseguridad y frustración al enfrentarse al texto.'}},
+  t:{name:'Producción de textos escritos', short:'Textos', rub:TXT, max:18,
+     txt:{e:'Comunica ideas de manera clara y coherente según el propósito del escrito, con vocabulario diverso, ortografía y puntuación esperadas para su grado. Los errores son mínimos y no alteran el propósito.',
+          d:'Construye un texto siguiendo algunas convenciones de la escritura esperadas para su grado, pero la organización, los errores y las inconsistencias dificultan la lectura o la comprensión del propósito.',
+          r:'No logra comunicar una idea clara por escrito. Vocabulario limitado, texto poco legible; ortografía, puntuación o segmentación no convencionales. Depende de apoyo externo para elaborar un texto acorde a su ciclo.'}},
+  c:{name:'Cálculo mental', short:'Cálculo', max:10,
+     txt:{e:'Comprende las expresiones numéricas y utiliza adecuadamente los procedimientos de cálculo; comunica el resultado con rapidez y precisión. Puede requerir apoyo visual.',
+          d:'Identifica la mayoría de las expresiones numéricas y la operación requerida. Requiere consolidar estrategias de cálculo mental.',
+          r:'No hay comprensión de las distintas expresiones numéricas o del tipo de operación requerida. No logra realizar las operaciones correspondientes a su grado.'}}
+};
+const LV = {e:'Nivel esperado', d:'En desarrollo', r:'Requiere apoyo'};
+const GRADOS = ['1.º primaria','2.º primaria','3.º primaria','4.º primaria','5.º primaria','6.º primaria','1.º secundaria','2.º secundaria','3.º secundaria'];
+
+// ---------- Estado ----------
+const KEY='sisat-v1';
+let uid=1;
+const mk=(n,l,t,c)=>({id:uid++,n,l,t,c:c.split('').map(x=>x==='-'?null:x),o:''});
+function ejemplo(){ return {ej:true, g:{escuela:'',grado:'3.º primaria',grupo:'A',ciclo:'2026-2027',apl:'Primera'}, a:[
+  mk('Alumno de ejemplo',[2,3,2,2,3,1],[1,2,1,2,1,2],'ccccvcxccc')
+]}; }
+let S;
+try{ const raw=localStorage.getItem(KEY); if(raw) S=JSON.parse(raw); }catch(e){}
+if(!S||!Array.isArray(S.a)) S=ejemplo();
+if(S.ej&&S.a.length>1&&S.a.every(a=>/ejemplo \d$/.test(a.n))){ uid=1; S=ejemplo(); }
+uid=Math.max(0,...S.a.map(a=>a.id))+1;
+let tab='grupo', sel=S.a[0]?S.a[0].id:null, confirmDel=null, confirmWipe=false, msg='';
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
+
+// ---------- Cálculo de resultados ----------
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function score(a,k){
+  if(k==='c'){ if(a.c.some(x=>x==null)) return null; return a.c.filter(x=>x==='c'||x==='v').length; }
+  if(a[k].some(x=>x==null)) return null; return a[k].reduce((s,x)=>s+x,0);
+}
+function level(sc,k){ if(sc==null) return null; return k==='c' ? (sc>=8?'e':sc>=5?'d':'r') : (sc>=15?'e':sc>=10?'d':'r'); }
+const pill=(lv,sc,max,full)=> lv ? `<span class="pill ${lv}"><i></i>${full?LV[lv]+' · ':''}${sc}/${max}</span>` : `<span class="pill n">Sin captura</span>`;
+const pct=(a,b)=> b? Math.round(a/b*100):0;
+function groupStats(k){
+  const ev=S.a.map(a=>({a,sc:score(a,k)})).filter(x=>x.sc!=null);
+  const d={e:0,d:0,r:0}; ev.forEach(x=>d[level(x.sc,k)]++);
+  return {n:ev.length, d, ev};
+}
+const band=p=> p>=81?'e':p>=56?'d':'r';
+
+// ---------- Vistas ----------
+function renderFields(){
+  const g=S.g;
+  document.getElementById('fields').innerHTML=`
+    <label>Escuela<input id="f-escuela" data-g="escuela" value="${esc(g.escuela)}" placeholder="Opcional"></label>
+    <label>Grado<select id="f-grado" data-g="grado">${GRADOS.map(x=>`<option${x===g.grado?' selected':''}>${x}</option>`).join('')}</select></label>
+    <label>Grupo<input id="f-grupo" class="sm" data-g="grupo" value="${esc(g.grupo)}"></label>
+    <label>Ciclo escolar<input id="f-ciclo" class="sm" style="width:7rem" data-g="ciclo" value="${esc(g.ciclo)}"></label>
+    <label>Aplicación<select id="f-apl" data-g="apl">${['Primera','Segunda','Tercera'].map(x=>`<option${x===g.apl?' selected':''}>${x}</option>`).join('')}</select></label>`;
+}
+const TABS=[['grupo','Grupo'],['l','Lectura'],['t','Producción de textos'],['c','Cálculo mental'],['informe','Informes'],['datos','Datos']];
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=TABS.map(([k,t])=>`<button role="tab" class="${SK[k]?'ev-'+k:''}" aria-selected="${tab===k}" data-a="tab" data-v="${k}" data-k="tab-${k}">${SK[k]?ICON[k]:''}${t}</button>`).join('');
+}
+const svg=p=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICON={
+  l:svg('<path d="M12 6c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-13c-3-.5-6 0-8 1.5z"/><path d="M12 6v13"/>'),
+  t:svg('<path d="M4 20l1-5L16 4l4 4L9 19l-5 1z"/><path d="M14 6l4 4"/>'),
+  c:svg('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>')
+};
+const GUIA={
+  l:{modo:'Individual · lectura en voz alta de un texto del grado',
+     que:'Explora cómo lee el alumno: si lo hace con fluidez y precisión, cómo usa la voz, con qué seguridad se enfrenta al texto y qué comprende.',
+     pasos:['Entregue al alumno la lectura de su grado y pídale leerla en voz alta; avísele que al final le hará unas preguntas.',
+            'Siga la lectura y marque en la hoja del aplicador las palabras o signos de puntuación con error u omisión.',
+            'Retire el texto y haga las preguntas de comprensión. Si con la primera recupera ideas, personajes y el orden del texto, no hace falta continuar.',
+            'Si el alumno se niega a leer, no insista: lo hará en otro momento.',
+            'Registre con la rúbrica mientras llega el siguiente alumno.']},
+  t:{modo:'Grupal · 30 minutos de escritura a partir de una consigna',
+     que:'Explora el conocimiento básico del lenguaje escrito: si el texto se puede leer, si comunica lo que se pidió, la riqueza del vocabulario, la puntuación y la ortografía.',
+     pasos:['Pida despejar el espacio de trabajo: solo lápiz, bolígrafo, goma y, si quieren, colores. Separe a los alumnos.',
+            'Entregue a cada alumno la hoja de actividades de su grado y explique que el trabajo es individual.',
+            'Dé 30 minutos y avise cuando falten 5. Quien termine puede dibujar al reverso algo relacionado con su escrito.',
+            'Analice cada texto por separado con la rúbrica, según lo esperado para el grado y sin comparar los textos del grupo.']},
+  c:{modo:'Individual · 10 preguntas orales, sin lápiz ni papel',
+     que:'Explora si el alumno aplica una estrategia propia para resolver operaciones mentalmente, y no solo el algoritmo de memoria.',
+     pasos:['Empiece con un par de cálculos sencillos para dar confianza y continúe con la primera pregunta del grado.',
+            'Plantee cada pregunta tal cual está escrita y en orden. Si el alumno lo pide, repítala una vez y guarde silencio.',
+            'Muestre la tarjeta de apoyo visual si responde mal o tarda más de 20 segundos; diga solo “Mira” y retírela a los 5 segundos.',
+            'No haga evidente si la respuesta fue correcta o incorrecta.',
+            'Detenga la aplicación después de seis errores consecutivos.',
+            'Con cinco errores o menos, repita al final las preguntas que tuvieron respuesta incorrecta.']}
+};
+function profile(a,k){
+  if(k==='c') return `<span class="strip">${a.c.map(x=>`<i class="${x||''}"></i>`).join('')}</span>`;
+  return `<span class="prof">${a[k].map((v,i)=>`<span class="pc">${[3,2,1].map(n=>`<i class="seg${v&&v>=n?' s'+v:''}"></i>`).join('')}${['I','II','III','IV','V','VI'][i]}</span>`).join('')}</span>`;
+}
+// ---------- Tiempo, fluidez y grabación (lectura) ----------
+// Referencia de palabras por minuto: Estándares Nacionales de Habilidad Lectora (SEP, 2010). No forma parte de la rúbrica del SisAT.
+const PPM={'1.º primaria':[35,59],'2.º primaria':[60,84],'3.º primaria':[85,99],'4.º primaria':[100,114],'5.º primaria':[115,124],'6.º primaria':[125,134],'1.º secundaria':[135,144],'2.º secundaria':[145,154],'3.º secundaria':[155,160]};
+let tm=null, tick=null;
+const fmt=s=>{ s=Math.max(0,s); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor(s*10%10); };
+const audios=new Map();
+let idb=null;
+try{ const rq=indexedDB.open('sisat-audio',1); rq.onupgradeneeded=()=>rq.result.createObjectStore('a'); rq.onsuccess=()=>{ idb=rq.result; loadAudio(sel); }; }catch(e){}
+function idbOp(mode,fn){ return new Promise(res=>{ if(!idb) return res(null); try{ const r=fn(idb.transaction('a',mode).objectStore('a')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); }catch(e){ res(null); } }); }
+function setAudio(id,blob){
+  const old=audios.get(id); if(old){ old.el.pause(); URL.revokeObjectURL(old.url); audios.delete(id); }
+  if(!blob) return;
+  const url=URL.createObjectURL(blob), el=document.createElement('audio');
+  el.controls=true; el.preload='metadata'; el.src=url; el.style.width='100%';
+  audios.set(id,{url,el});
+}
+async function loadAudio(id){ if(id==null||audios.has(id)) return; const b=await idbOp('readonly',s=>s.get(id)); if(b&&!audios.has(id)){ setAudio(id,b); if(tab==='l'&&sel===id) render(); } }
+function mountAudio(){ const slot=document.getElementById('audioslot'); if(!slot) return; const au=audios.get(sel); if(au) slot.appendChild(au.el); else loadAudio(sel); }
+function fluidez(a){
+  const run=tm&&tm.id===a.id, w=+S.g.palabras||0, s=+a.s||0, e=a.e===''||a.e==null?0:+a.e, au=audios.get(a.id);
+  let out='Tome el tiempo y escriba abajo, en Precisión, las palabras del texto para calcular las palabras por minuto.';
+  if(w>0&&s>0){ const ppm=Math.round(w/s*60), pcm=Math.round(Math.max(0,w-e)/s*60), r=PPM[S.g.grado];
+    out=`<b>${ppm} palabras por minuto</b>${e?` · ${pcm} correctas por minuto`:''}. `+(r?`Referencia SEP 2010 para ${S.g.grado}: ${r[0]} a ${r[1]} (${ppm<r[0]?'por debajo':ppm>r[1]?'por encima':'dentro'} del rango).`:''); }
+  else if(s>0) out='Tiempo registrado. Escriba abajo, en Precisión, las palabras del texto para calcular las palabras por minuto.';
+  return `<div class="fluid"><div class="cn">Tiempo de lectura</div>
+    <div class="rowflex"><span class="clock" id="clock">${fmt(run?(Date.now()-tm.t0)/1000:s)}</span>
+      ${run?`<button class="btn pri" data-a="tstop" data-k="tbtn">Detener</button>`:`<button class="btn pri" data-a="tstart" data-k="tbtn">${s?'Volver a tomar':'Iniciar lectura'}</button>`}
+      ${s&&!run?`<button class="btn" data-a="treset" data-k="treset">Borrar tiempo</button>`:''}</div>
+    <p class="small">${out}</p>
+    <div class="cn">Grabación de la lectura</div>
+    <div class="rowflex"><button class="btn" data-a="rec" data-k="rec">${au?'Reemplazar grabación':'Grabar lectura'}</button><input id="rec" type="file" accept="audio/*" capture hidden data-rec="1" aria-label="Archivo de audio">
+      ${au?`<button class="btn" data-a="usedur" data-k="usedur">Usar su duración como tiempo</button><button class="btn danger" data-a="delrec" data-k="delrec">Borrar grabación</button>`:''}</div>
+    <div id="audioslot"></div>
+    ${msg?`<p class="small" role="status">${esc(msg)}</p>`:''}
+    <p class="muted small">En el celular, “Grabar lectura” abre la grabadora del teléfono; en computadora permite elegir un archivo de audio. La grabación se guarda solo en este dispositivo y no entra en el respaldo. Las palabras por minuto son un dato de apoyo: el nivel del SisAT se define con la rúbrica.</p></div>`;
+}
+function capture(a,k){
+  const sc=score(a,k), lv=level(sc,k);
+  let interp;
+  if(lv){
+    let adv='';
+    if(k!=='c'){ const lo=SK[k].rub.filter((c,i)=>a[k][i]===1).map(c=>c.k), hi=SK[k].rub.filter((c,i)=>a[k][i]===3).map(c=>c.k);
+      adv=`${lo.length?`<p class="small"><b>Atender primero:</b> ${lo.join(', ').toLowerCase()}.</p>`:''}${hi.length?`<p class="small"><b>Fortalezas como punto de partida:</b> ${hi.join(', ').toLowerCase()}.</p>`:''}`; }
+    else adv=calcExplica(a);
+    interp=`<div class="interp"><p>${pill(lv,sc,SK[k].max,true)}</p><p>${SK[k].txt[lv]}</p>${adv}</div>`;
+  } else interp=`<p class="muted small">${k==='c'?'Marque las diez preguntas':'Elija un puntaje en los seis componentes'} para ver el nivel y su interpretación.</p>`;
+  let body;
+  if(k==='c'){
+    const nc=a.c.filter(x=>x==='c'||x==='v').length, nv=a.c.filter(x=>x==='v').length, pend=a.c.filter(x=>x==null).length;
+    body=`<p class="muted small">Por pregunta: <b>✓</b> correcta · <b>T</b> correcta con tarjeta de apoyo visual · <b>✗</b> incorrecta. ${nc} correctas (${nv} con tarjeta)${pend?`, ${pend} sin marcar`:''}.</p>
+      ${calcRows(a)}
+      ${pend&&pend<10?`<div><button class="btn" data-a="fillx" data-k="fillx">Marcar las ${pend} restantes como incorrectas</button></div>`:''}`;
+  } else {
+    const w=+S.g.palabras||0, e=a.e===''||a.e==null?null:+a.e;
+    let pc='';
+    if(k==='l'){ let out='Escriba ambos datos para calcular el porcentaje de errores.';
+      if(w>0&&e!=null&&e>=0){ const p=Math.round(e/w*100), sug=p<=3?3:p<=6?2:1;
+        out=`<b>${p} % de errores</b> → puntaje sugerido <b>${sug}</b> <button class="btn" data-a="sug" data-v="${sug}" data-k="sug">Usar ${sug}</button>`; }
+      pc=`<div class="pcalc"><label>Palabras del texto <input class="inp" id="pw" type="number" min="1" inputmode="numeric" data-g="palabras" value="${esc(S.g.palabras||'')}"></label><label>Errores del alumno <input class="inp" id="pe" type="number" min="0" inputmode="numeric" data-e="1" value="${esc(a.e==null?'':a.e)}"></label><span>${out}</span></div>`; }
+    body=SK[k].rub.map((c,i)=>`<div class="comp"><span class="cn">${['I','II','III','IV','V','VI'][i]}. ${c.k}</span>
+      ${k==='l'&&i===1?pc:''}
+      <div class="opts">${c.o.map((o,j)=>{const v=3-j;return `<button class="opt v${v}" aria-pressed="${a[k][i]===v}" data-a="set" data-s="${k}" data-i="${i}" data-v="${v}" data-k="o-${k}-${i}-${v}"><b>${v}</b><span>${o[0]}</span></button>`}).join('')}</div>
+      <details><summary>Qué observar en cada puntaje</summary>${c.o.map((o,j)=>`<div class="dl">${3-j} · ${o[0]}</div><ul>${o[1].map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}</details></div>`).join('');
+  }
+  return `<div class="skillhead"><input class="inp" id="nombre" data-n="1" value="${esc(a.n)}" aria-label="Nombre" style="font-weight:700;font-size:1.05rem;flex:1;min-width:10rem">
+      ${S.a.length>1?`<button class="btn pri" data-a="next" data-k="next">Siguiente alumno</button>`:''}</div>
+    <p class="muted small">Alumno ${S.a.indexOf(a)+1} de ${S.a.length} · ${SK[k].name}</p>
+    ${interp}${k==='l'?fluidez(a):''}${body}
+    <div class="skill"><label class="cn" for="obs">Observaciones</label><textarea id="obs" data-o="1" style="font-family:var(--body);font-size:.92rem;min-height:70px" placeholder="${k==='c'?'Estrategia de cálculo que usó, preguntas donde dudó…':k==='l'?'Actitud ante la lectura, palabras donde se detuvo…':'Tipo de texto, qué le costó más…'}">${esc(a.o)}</textarea></div>`;
+}
+function semaforo(k,open){
+  const s=groupStats(k), head=`<h2 class="hic ev-${k}">${ICON[k]}${SK[k].name}</h2>`, btn=open?`<div><button class="btn" data-a="tab" data-v="${k}" data-k="open-${k}">Abrir ${SK[k].short.toLowerCase()}</button></div>`:'';
+  if(!s.n) return `<div class="panel">${head}<p class="muted">Sin capturas completas todavía.</p>${btn}</div>`;
+  const verdict= s.d.e/s.n>0.5 ? 'Fortaleza del grupo: más de la mitad está en nivel esperado. Conviene mantener las prácticas actuales y atender con actividades diferenciadas a quienes están en amarillo o rojo.'
+    : 'Prevalecen el amarillo o el rojo. Según el manual, la intervención docente requiere modificaciones sustanciales: la mayoría no se está beneficiando de la dinámica de trabajo cotidiana.';
+  return `<div class="panel">${head}
+    <div class="bar" role="img" aria-label="Esperado ${s.d.e}, en desarrollo ${s.d.d}, requiere apoyo ${s.d.r}">${['e','d','r'].map(l=>s.d[l]?`<div class="${l}" style="width:${s.d[l]/s.n*100}%"></div>`:'').join('')}</div>
+    <div class="legend">${['e','d','r'].map(l=>`<span class="pill ${l}"><i></i>${LV[l]}: ${s.d[l]} (${pct(s.d[l],s.n)} %)</span>`).join('')}</div>
+    <p class="small">${verdict}</p><p class="muted small">${s.n} de ${S.a.length} alumnos evaluados.</p>${btn}</div>`;
+}
+function compPanel(k){
+  const s=groupStats(k); if(!s.n) return '';
+  const rows=SK[k].rub.map((c,i)=>{const p=pct(s.ev.reduce((x,e)=>x+e.a[k][i],0),3*s.n), b=band(p);
+    return {html:`<tr><td>${['I','II','III','IV','V','VI'][i]}. ${c.k}</td><td style="width:30%"><div class="meter"><div class="${b}" style="width:${p}%"></div></div></td><td style="text-align:right"><b>${p} %</b></td><td class="small">${{e:'Manejo adecuado',d:'Avance significativo',r:'Poco avance'}[b]}</td></tr>`,p,name:c.k}});
+  const low=rows.slice().sort((a,b)=>a.p-b.p)[0];
+  return `<div class="panel"><h2>Logro por componente</h2><div class="scroll"><table><thead><tr><th>Componente</th><th></th><th>Logro</th><th>Lectura del dato</th></tr></thead><tbody>${rows.map(r=>r.html).join('')}</tbody></table></div>
+    <p class="small">El componente con menor desempeño es <b>${low.name.toLowerCase()}</b> (${low.p} %): es donde conviene poner más atención al planear la intervención.</p></div>`;
+}
+function calcPanel(){
+  const s=groupStats('c'); if(!s.n) return '';
+  const tot=s.n*10, ok=s.ev.reduce((x,e)=>x+e.sc,0), vis=s.ev.reduce((x,e)=>x+e.a.c.filter(v=>v==='v').length,0), p=pct(ok,tot);
+  const t= p>=81?'De forma generalizada, el grupo ha desarrollado estrategias que facilitan el cálculo mental.'+(ok&&vis/ok>=0.5?' Como la mitad o más de las respuestas correctas fueron con apoyo visual, conviene reforzar el cálculo mental con presentación verbal.':'')
+    : p>=51?'Hay diferencias de desempeño en el grupo: hace falta más práctica, socializando en clase las estrategias que emplean los estudiantes.'
+    : 'Dificultad generalizada en el uso de estrategias de cálculo mental, sin importar la forma de presentación ni la complejidad de las operaciones.';
+  return `<div class="panel"><h2>Respuestas correctas del grupo</h2><div class="rowflex"><div class="meter" style="flex:1"><div class="${p>=81?'e':p>=51?'d':'r'}" style="width:${p}%"></div></div><b>${p} %</b></div>
+    <p class="small">${t}</p><p class="muted small">${ok} de ${tot} respuestas correctas; ${vis} de ellas con tarjeta de apoyo visual (${pct(vis,ok)} %). El manual advierte que esta prueba no permite analizar qué tipo de operación se dificulta: revise si en el aula se plantean distintos caminos de resolución y se socializan.</p></div>`;
+}
+function mapa(k){
+  const hd=k==='c'?[1,2,3,4,5,6,7,8,9,10]:['I','II','III','IV','V','VI'];
+  const rows=S.a.map(a=>`<tr><td>${esc(a.n)}</td>${(k==='c'?a.c:a[k]).map(v=>v==null?'<td class="hc"></td>':k==='c'?`<td class="hc ${v==='c'?'h3':v==='v'?'hv':'h1'}">${{c:'✓',v:'T',x:'✗'}[v]}</td>`:`<td class="hc h${v}">${v}</td>`).join('')}</tr>`).join('');
+  return `<div class="panel"><h2>Mapa del grupo</h2><div class="scroll"><table><thead><tr><th>Alumno</th>${hd.map(h=>`<th style="text-align:center">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted small">${k==='c'?'Cada columna es una pregunta: ✓ correcta, T con tarjeta, ✗ incorrecta.':'Cada columna es un componente de la rúbrica. Las columnas con más rojo señalan qué trabajar con todo el grupo.'}</p></div>`;
+}
+function viewSkill(k){
+  const g=GUIA[k];
+  const guide=`<div class="guide"><div class="gh">${ICON[k]}<div><h2>${SK[k].name}</h2><span class="small">${g.modo}</span></div></div>
+    <p class="small">${g.que}</p>
+    ${k==='c'?`<div class="flow"><span>Pregunta</span>→<span><b>20 s</b> para responder</span>→<span>Tarjeta <b>5 s</b></span>→<span><b>20 s</b> más</span>→<span>Siguiente</span></div>`:''}
+    <details><summary>Cómo se aplica, paso a paso</summary><ol>${g.pasos.map(p=>`<li>${p}</li>`).join('')}</ol></details></div>`;
+  if(!S.a.length) return `<div class="space ev-${k}">${guide}<div class="panel"><p class="muted">Aún no hay alumnos. Agréguelos en la pestaña Grupo.</p><div><button class="btn pri" data-a="tab" data-v="grupo" data-k="irgrupo">Ir a Grupo</button></div></div></div>`;
+  if(!S.a.some(x=>x.id===sel)) sel=S.a[0].id;
+  const a=S.a.find(x=>x.id===sel);
+  const rows=S.a.map(x=>{const sc=score(x,k);return `<tr class="row${x.id===sel?' sel':''}" data-a="sel" data-v="${x.id}"><td><button class="rowbtn" data-a="sel" data-v="${x.id}" data-k="row-${x.id}">${esc(x.n)}</button></td><td style="width:96px">${profile(x,k)}</td><td>${pill(level(sc,k),sc,SK[k].max)}</td></tr>`}).join('');
+  return `<div class="space ev-${k}">${guide}
+    <div class="cols">
+      <div class="panel"><h2>Alumnos</h2><div class="scroll"><table><thead><tr><th>Alumno</th><th>${k==='c'?'Preguntas':'Componentes'}</th><th>Nivel</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="legend">${['e','d','r'].map(l=>`<span class="pill ${l}"><i></i>${LV[l]}</span>`).join('')}</div></div>
+      <div class="panel" id="ficha">${capture(a,k)}</div>
+    </div>
+    <h2 class="hic">${ICON[k]}Resultados del grupo en ${SK[k].name.toLowerCase()}</h2>
+    <div class="grid3">${semaforo(k)}${k==='c'?calcPanel():compPanel(k)}${mapa(k)}</div></div>`;
+}
+function viewResumen(){
+  const rows=S.a.map(a=>{
+    const cells=['l','t','c'].map(k=>{const sc=score(a,k);return `<td><button class="rowbtn" data-a="go" data-v="${a.id}" data-s="${k}" data-k="go-${a.id}-${k}" aria-label="Abrir ${SK[k].short} de ${esc(a.n)}">${pill(level(sc,k),sc,SK[k].max)}</button></td>`}).join('');
+    const del= confirmDel===a.id ? `<button class="btn danger" data-a="del" data-k="del">Sí, quitar</button> <button class="btn" data-a="nodel" data-k="nodel">No</button>` : `<button class="btn" data-a="askdel" data-v="${a.id}" data-k="askdel-${a.id}" aria-label="Quitar a ${esc(a.n)}">Quitar</button>`;
+    return `<tr><td><b>${esc(a.n)}</b></td>${cells}<td style="text-align:right;white-space:nowrap"><button class="btn" data-a="inf" data-v="${a.id}" data-k="inf-${a.id}">Informe</button> ${del}</td></tr>`;
+  }).join('');
+  const st={l:groupStats('l'),t:groupStats('t'),c:groupStats('c')};
+  const withRed=['l','t','c'].filter(k=>st[k].n&&st[k].d.r).sort((a,b)=>st[b].d.r/st[b].n-st[a].d.r/st[a].n);
+  const prio= withRed.length ? `<div class="note"><span><b>Habilidad de atención prioritaria: ${SK[withRed[0]].name.toLowerCase()}</b>, con ${pct(st[withRed[0]].d.r,st[withRed[0]].n)} % del grupo en “requiere apoyo”.</span><button class="btn" data-a="tab" data-v="${withRed[0]}" data-k="prio">Abrir ${SK[withRed[0]].short.toLowerCase()}</button></div>` : '';
+  const al=S.a.map(a=>({a,r:['l','t','c'].filter(k=>level(score(a,k),k)==='r')})).filter(x=>x.r.length).sort((x,y)=>y.r.length-x.r.length);
+  const lista=`<div class="panel"><h2>Alumnos que requieren apoyo</h2>${al.length?`<div class="scroll"><table><thead><tr><th>Alumno</th><th>Requiere apoyo en</th><th>Componentes en 1 punto</th></tr></thead><tbody>${al.map(x=>{
+      const comps=['l','t'].filter(k=>!x.a[k].some(v=>v==null)).flatMap(k=>SK[k].rub.filter((c,i)=>x.a[k][i]===1).map(c=>c.k.toLowerCase()));
+      return `<tr><td><b>${esc(x.a.n)}</b></td><td>${x.r.map(k=>`<button class="rowbtn" data-a="go" data-v="${x.a.id}" data-s="${k}" data-k="ap-${x.a.id}-${k}"><span class="pill r"><i></i>${SK[k].short}</span></button>`).join(' ')}</td><td class="small">${comps.join(', ')||'—'}</td></tr>`}).join('')}</tbody></table></div>
+      <p class="small muted">Su atención es de la mayor prioridad y prontitud. El manual sugiere reunir información adicional: asistencia y participación, conducta y relación con docentes y compañeros, y qué estrategias ya se intentaron.</p>`:'<p class="muted">Ningún alumno evaluado está en “requiere apoyo”.</p>'}</div>`;
+  return `<div style="display:flex;flex-direction:column;gap:16px">
+    ${S.ej?`<div class="note"><span><b>Este alumno es un ejemplo</b> para mostrar cómo funciona la herramienta. No son datos reales.</span><button class="btn pri" data-a="start" data-k="start">Empezar con mi grupo</button></div>`:''}
+    <div class="panel">
+      <h2>Grupo ${esc(S.g.grado)} ${esc(S.g.grupo)} <span class="muted small" style="font-family:var(--body);font-weight:500">· ${S.a.length} alumnos</span></h2>
+      <form class="addrow" id="addform"><input class="inp" id="nuevo" placeholder="Nombre del alumno" aria-label="Nombre del alumno" autocomplete="off"><button class="btn pri" type="submit">Agregar</button></form>
+      <div class="scroll"><table><thead><tr><th>Alumno</th><th>Lectura</th><th>Textos</th><th>Cálculo</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">Agregue a su primer alumno con el campo de arriba.</td></tr>'}</tbody></table></div>
+      <p class="muted small">Toque un nivel para abrir esa evaluación del alumno. En 1.º de primaria no se aplica antes del segundo semestre; si aplica en septiembre u octubre, use los instrumentos del grado anterior cursado.</p>
+    </div>
+    ${prio}
+    <div class="grid3">${semaforo('l',true)}${semaforo('t',true)}${semaforo('c',true)}</div>
+    ${lista}
+    <div class="panel"><h2>Preguntas para el análisis en Consejo Técnico Escolar</h2><ol class="steps">
+      <li>Fortalezas y áreas de oportunidad por grupo: ¿qué demanda atención prioritaria?</li>
+      <li>Alumnos que requieren apoyo: ¿cuáles son sus necesidades y áreas de oportunidad?</li>
+      <li>Logros y desafíos como escuela: ¿cuáles son nuestras problemáticas educativas?</li>
+      <li>¿Qué prácticas docentes y escolares favorecen, o no, el logro de resultados?</li>
+      <li>¿Cómo lograremos superar nuestras problemáticas educativas?</li></ol></div></div>`;
+}
+// ---------- Cálculo mental: preguntas y errores ----------
+// Preguntas del anexo 3 del manual (SEP, 2018). Las que no se pudieron leer con certeza quedan vacías para que el docente las escriba.
+const PREG={
+  '1.º primaria':[['Vamos a contar juntos… 14, 13, 12, __, __, __ (con tarjeta)','11, 10, 9'],['¿Cuánto es 5 + 5?','10'],['¿Cuánto es 6 + 2?','8'],['Si a 5 le quitas 2, ¿cuánto te queda?','3'],['10 − 5','5'],['10 + 10','20'],['19 − 1','18'],['¿Cuántas manzanas faltan para tener 10? (con tarjeta)','3'],['10 + 7','17'],['29 + 2','31']],
+  '2.º primaria':[['8 + 6','14'],['5 + 5 + 5','15'],['60 + 10','70'],['30 + 8','38'],['10 − 7','3'],['200 + 100','300'],['50 − 10','40'],['28 − 8','20'],['150 − 50','100'],['47 + 10','57']],
+  '3.º primaria':[['26 + 9','35'],['¿Cuánto le falta a 35 para llegar a 50?','15'],['45 − 10','35'],['260 − 100','160'],['58 + 12','70'],['80 − 11','69'],['¿Qué número sigue en esta serie? 53, 56, 59, __ (con tarjeta)','62'],['¿Qué número sigue en esta serie? 98, 96, 94, __ (con tarjeta)','92'],['4 x 8','32'],['9 x 7','63']],
+  '4.º primaria':[['1500 + 200','1700'],['100 − 89','11'],['20 × 6','120'],['8 ÷ 2','4'],['20 ÷ 4','5'],['1.5 + 0.5','2'],['1.0 − 0.2','0.8'],['2.3 + 1.0','3.3'],['650 ÷ 10','65'],['298 para 400','102']],
+  '5.º primaria':[['El doble de 0.25','0.50'],['4.70 + 0.30','5'],['',''],['',''],['¿Qué número sigue en esta serie? 4, 8, 16, 32, __','64'],['589 para 1000','411'],['120 ÷ 4','30'],['',''],['',''],['8.9 − 0.3','8.6']],
+  '6.º primaria':[['25 x 4 + 15','115'],['23 x 1000','23000'],['2750 − 750','2000'],['8.75 + 0.25','9'],['La mitad de 4.6','2.3'],['800 ÷ 20','40'],['',''],['',''],['',''],['','']]
+};
+const ETIPO={op:'No reconoció la operación o no intentó responder',ix:'Respuesta inexacta, cercana a la correcta',tm:'Tardó demasiado o no respondió a tiempo',ot:'Otro'};
+const ESIG={op:'no identifica qué operación se le pide. Conviene trabajar el significado de la expresión antes que la rapidez.',
+  ix:'comprende la operación pero pierde precisión. Conviene que explique su procedimiento y verifique el resultado.',
+  tm:'probablemente intenta resolver con el algoritmo escrito. Conviene practicar estrategias propias, como descomponer los números.'};
+let pqOpen=false;
+function pq(i){ const o=S.g.pq&&S.g.pq[S.g.grado]&&S.g.pq[S.g.grado][i], d=(PREG[S.g.grado]||[])[i]||['','']; return o?[o[0]!=null?o[0]:d[0], o[1]!=null?o[1]:d[1]]:d; }
+const opDe=p=>!p?null:/serie|contar/i.test(p)?'series y conteo':/doble|mitad/i.test(p)?'dobles y mitades':/falta|para/i.test(p)?'complementos (cuánto falta)':/÷/.test(p)?'división':/\d\s*[x×]\s*\d/.test(p)?'multiplicación':/quitas|[−–-]/.test(p)?'resta':/\+/.test(p)?'suma':null;
+function calcErrLines(a){
+  const ce=a.ce||[], items=[], notas=[], tipos={}, ops={}; let sinTipo=0;
+  a.c.forEach((x,i)=>{ if(x!=='x') return; const [p,r]=pq(i), e=ce[i]||{};
+    items.push(`Pregunta ${i+1}${p?` (${p}${r?` = ${r}`:''})`:''}${e.r?`: respondió ${e.r}`:''}${e.t?`. ${ETIPO[e.t]}`:''}.`);
+    if(e.t) tipos[e.t]=(tipos[e.t]||0)+1; else sinTipo++;
+    const op=opDe(p); if(op) ops[op]=(ops[op]||0)+1; });
+  Object.keys(ops).length&&notas.push('Operaciones donde falló: '+Object.entries(ops).sort((x,y)=>y[1]-x[1]).map(([o,n])=>`${o} (${n})`).join(', ')+'.');
+  ['op','ix','tm'].forEach(t=>{ if(tipos[t]) notas.push(`${tipos[t]} ${tipos[t]===1?'error indica':'errores indican'} que ${ESIG[t]}`); });
+  if(sinTipo&&items.length) notas.push(`Falta registrar el tipo de error en ${sinTipo} ${sinTipo===1?'pregunta':'preguntas'} para una explicación más precisa.`);
+  return {items,notas};
+}
+function calcExplica(a){
+  const e=calcErrLines(a);
+  if(!e.items.length) return `<p class="small">No tuvo respuestas incorrectas.</p>`;
+  return `<div class="small"><b>Errores:</b><ul>${e.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${e.notas.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`;
+}
+function calcRows(a){
+  const ce=a.ce||[];
+  return `<details class="pqs"${pqOpen?' open':''}><summary>Preguntas de ${esc(S.g.grado)} (ver o editar)</summary>
+      <p class="muted small">Se usan para todo el grupo. Las de 1.º a 4.º de primaria vienen del manual; verifique las demás con su cuadernillo y escriba las que falten.</p>
+      ${a.c.map((x,i)=>{const [p,r]=pq(i);return `<div class="pqrow"><span class="qn">${i+1}</span><input class="inp" id="pq-${i}" data-pq="${i}" value="${esc(p)}" placeholder="Pregunta" aria-label="Pregunta ${i+1}"><input class="inp" id="pr-${i}" data-pr="${i}" value="${esc(r)}" placeholder="Respuesta" aria-label="Respuesta ${i+1}"></div>`}).join('')}</details>
+    <div class="qlist">${a.c.map((x,i)=>{const [p,r]=pq(i), e=ce[i]||{};
+      return `<div class="qrow"><div class="qmain"><span class="qn">${i+1}</span><span class="qt">${p?esc(p):'<span class="muted">Pregunta sin texto</span>'}${r?` <span class="muted small">= ${esc(r)}</span>`:''}</span>
+        <span class="qb">${[['c','✓','Correcta'],['v','T','Correcta con tarjeta'],['x','✗','Incorrecta']].map(([v,s,t])=>`<button class="${v}" title="${t}" aria-label="Pregunta ${i+1}: ${t}" aria-pressed="${x===v}" data-a="calc" data-i="${i}" data-v="${v}" data-k="q-${i}-${v}">${s}</button>`).join('')}</span></div>
+        ${x==='x'?`<div class="qerr"><select class="inp" id="et-${i}" data-et="${i}" aria-label="Tipo de error en la pregunta ${i+1}"><option value="">Tipo de error…</option>${Object.entries(ETIPO).map(([k,t])=>`<option value="${k}"${e.t===k?' selected':''}>${t}</option>`).join('')}</select><input class="inp" id="er-${i}" data-er="${i}" value="${esc(e.r||'')}" placeholder="¿Qué respondió?" aria-label="Respuesta del alumno en la pregunta ${i+1}"></div>`:''}</div>`}).join('')}</div>`;
+}
+// ---------- Informe en PDF ----------
+function pdfDoc(alumnos){
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'letter'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=16, INK=[23,32,58], GRAY=[86,96,128], COL={e:[46,158,104],d:[223,166,38],r:[212,72,63]};
+  let y=M;
+  const clean=s=>String(s==null?'':s).replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,'...').replace(/[–—−]/g,'-').replace(/→/g,'>').replace(/[^\x20-\x7E\xA0-\xFF\n]/g,'');
+  const need=h=>{ if(y+h>H-M){ doc.addPage(); y=M; } };
+  const text=(s,o)=>{ o=o||{}; const size=o.size||10, lh=size*0.45, x=M+(o.x||0);
+    doc.setFont('helvetica',o.b?'bold':'normal'); doc.setFontSize(size); doc.setTextColor.apply(doc,o.color||INK);
+    doc.splitTextToSize(clean(s),W-M-x).forEach(l=>{ need(lh); doc.text(l,x,y+lh*0.8); y+=lh; }); y+=o.gap==null?1.5:o.gap; };
+  alumnos.forEach((a,idx)=>{
+    if(idx){ doc.addPage(); } y=M;
+    text('Informe individual SisAT',{size:9,color:GRAY,gap:1});
+    text(a.n,{size:18,b:true,gap:1});
+    text(`${S.g.escuela?S.g.escuela+' · ':''}${S.g.grado} ${S.g.grupo} · Ciclo ${S.g.ciclo} · ${S.g.apl} aplicación · ${hoy()}`,{size:9,color:GRAY,gap:4});
+    informeDatos(a).forEach(o=>{
+      need(22); doc.setDrawColor(214,220,234); doc.line(M,y,W-M,y); y+=4;
+      const badge=clean(o.lv?`${LV[o.lv]} · ${o.sc}/${o.max}`:'Sin evaluar');
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor.apply(doc,INK); doc.text(clean(o.name),M,y+4.5);
+      doc.setFontSize(9); const bw=doc.getTextWidth(badge)+6;
+      doc.setFillColor.apply(doc,o.lv?COL[o.lv]:[160,166,184]); doc.roundedRect(W-M-bw,y,bw,6,1.5,1.5,'F');
+      doc.setTextColor.apply(doc,o.lv==='d'?[60,42,0]:[255,255,255]); doc.text(badge,W-M-bw+3,y+4.2); y+=9;
+      if(!o.lv){ text('Sin evaluar todavía.',{color:GRAY}); return; }
+      text(o.txt);
+      if(o.k==='l'&&+a.s) text(`Tiempo de lectura: ${fmt(+a.s)}${ppmDe(a)?` · ${ppmDe(a)} palabras por minuto`:''}.`,{size:9});
+      if(o.k==='c'){ text(`${o.sc} de 10 respuestas correctas; ${o.vis} con tarjeta de apoyo visual.`,{size:9});
+        if(o.err.items.length){ text('Errores',{b:true,gap:0.5}); o.err.items.forEach(x=>text('- '+x,{x:3,size:9,gap:0.5})); y+=1; o.err.notas.forEach(x=>text(x,{size:9})); } }
+      o.comps.forEach(c=>{ need(5.4); const lv={3:'e',2:'d',1:'r'}[c.v];
+        doc.setFillColor.apply(doc,COL[lv]); doc.rect(M,y,5,4.2,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,lv==='d'?[60,42,0]:[255,255,255]); doc.text(String(c.v),M+1.7,y+3.2);
+        doc.setFont('helvetica','normal'); doc.setTextColor.apply(doc,INK); doc.text(clean(`${c.name}: ${c.label}`),M+7,y+3.2); y+=5.2; });
+      if(o.comps.length) y+=1.5;
+      if(o.fort.length) text(`Fortalezas: ${o.fort.join(', ').toLowerCase()}.`);
+      text('Áreas de oportunidad',{b:true,gap:0.5});
+      if(o.k==='c') text(o.areas[0],{x:3,size:9});
+      else if(!o.areas.length) text('Ninguna: alcanzó el máximo en todos los componentes.',{x:3,size:9});
+      else o.areas.forEach(x=>text(`- ${x.name} (${x.tipo}). Meta siguiente: ${x.meta}`,{x:3,size:9,gap:0.8}));
+      y+=2;
+    });
+    if(a.o){ need(14); doc.setDrawColor(214,220,234); doc.line(M,y,W-M,y); y+=4; text('Observaciones del docente',{b:true,size:11}); text(a.o); }
+    y+=2; text('Niveles y metas tomados de las rúbricas del SisAT (SEP, 2018). Este informe describe habilidades básicas; no es una calificación.',{size:8,color:GRAY});
+  });
+  return doc;
+}
+// ---------- Informe individual ----------
+let dl=null;
+try{ if(window.claude&&window.claude.use) window.claude.use('downloads').then(d=>{ dl=d; if(d&&tab==='informe') render(); },()=>{}); }catch(e){}
+function informeDatos(a){
+  const g12=/^[12]\.º primaria/.test(S.g.grado);
+  const meta=arr=>arr.filter(d=>d.startsWith('1.º y 2.º')?g12:d.startsWith('3.º a 6.º')?!g12:true).map(d=>d.replace(/^(1\.º y 2\.º|3\.º a 6\.º): /,'')).join(' ');
+  return ['l','t','c'].map(k=>{
+    const sc=score(a,k), lv=level(sc,k), o={k,sc,lv,name:SK[k].name,max:SK[k].max,comps:[],fort:[],areas:[]};
+    if(!lv) return o;
+    o.txt=SK[k].txt[lv];
+    if(k==='c'){ o.vis=a.c.filter(x=>x==='v').length; o.err=calcErrLines(a);
+      o.areas.push(lv==='e' ? (sc&&o.vis/sc>=0.5?'Reforzar el cálculo mental con presentación verbal, sin depender de la tarjeta de apoyo visual.':'Sin áreas de oportunidad prioritarias en esta habilidad.')
+        : lv==='d' ? 'Consolidar estrategias de cálculo mental: pedirle que explique cómo resuelve y socializar distintas estrategias en clase.'
+        : 'Trabajar la comprensión de las expresiones numéricas y del tipo de operación. Conviene identificar si no reconoce la operación, si responde cerca pero inexacto o si tarda porque intenta el algoritmo.');
+    } else SK[k].rub.forEach((c,i)=>{ const v=a[k][i]; o.comps.push({name:c.k,v,label:c.o[3-v][0]});
+      if(v===3) o.fort.push(c.k); else o.areas.push({name:c.k,tipo:v===1?'prioritaria':'por consolidar',meta:meta(c.o[2-v][1])}); });
+    if(k!=='c') o.areas.sort((x,y)=>(x.tipo==='prioritaria'?0:1)-(y.tipo==='prioritaria'?0:1));
+    return o; });
+}
+function ppmDe(a){ const w=+S.g.palabras||0, s=+a.s||0; return w>0&&s>0?Math.round(w/s*60):null; }
+const hoy=()=>new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+function informeHTML(a){
+  const d=informeDatos(a), rojos=d.filter(o=>o.lv==='r'), pend=d.filter(o=>!o.lv);
+  const sec=o=>{
+    const head=`<h3 class="hic">${ICON[o.k]}<span style="flex:1">${o.name}</span>${pill(o.lv,o.sc,o.max,true)}</h3>`;
+    if(!o.lv) return `<section class="rs ev-${o.k}">${head}<p class="muted">Sin evaluar todavía.</p></section>`;
+    const extra= o.k==='l'&&+a.s ? `<p class="small">Tiempo de lectura: ${fmt(+a.s)}${ppmDe(a)?` · ${ppmDe(a)} palabras por minuto`:''}.</p>` : o.k==='c' ? `<p class="small">${o.sc} de 10 respuestas correctas; ${o.vis} con tarjeta de apoyo visual.</p>${o.err.items.length?`<div><b>Errores</b><ul>${o.err.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${o.err.notas.map(x=>`<p class="small">${esc(x)}</p>`).join('')}</div>`:''}` : '';
+    const tabla= o.comps.length ? `<div class="scroll"><table><thead><tr><th>Componente</th><th>Puntaje</th><th>Resultado</th></tr></thead><tbody>${o.comps.map(c=>`<tr><td>${c.name}</td><td class="hc h${c.v}">${c.v}</td><td class="small">${c.label}</td></tr>`).join('')}</tbody></table></div>` : '';
+    const areas= o.k==='c' ? `<p>${o.areas[0]}</p>` : o.areas.length ? `<ul>${o.areas.map(x=>`<li><b>${x.name}</b> (${x.tipo}). Meta siguiente: ${x.meta}</li>`).join('')}</ul>` : '<p>Sin áreas de oportunidad: alcanzó el máximo en todos los componentes.</p>';
+    return `<section class="rs ev-${o.k}">${head}<p>${o.txt}</p>${extra}${tabla}
+      ${o.fort.length?`<p><b>Fortalezas:</b> ${o.fort.join(', ').toLowerCase()}.</p>`:''}
+      <div><b>Áreas de oportunidad</b>${areas}</div></section>`; };
+  return `<article class="rep" id="rep">
+    <header><h2>Informe individual: ${esc(a.n)}</h2>
+      <p class="muted small">${S.g.escuela?esc(S.g.escuela)+' · ':''}${esc(S.g.grado)} ${esc(S.g.grupo)} · Ciclo ${esc(S.g.ciclo)} · ${esc(S.g.apl)} aplicación · ${hoy()}</p></header>
+    <div class="evs">${d.map(o=>`<div class="ev ev-${o.k}"><span class="evh">${ICON[o.k]}<b>${SK[o.k].short}</b></span>${profile(a,o.k)}${pill(o.lv,o.sc,o.max)}</div>`).join('')}</div>
+    ${rojos.length?`<p class="interp"><span><b>Atención prioritaria:</b> requiere apoyo en ${rojos.map(o=>o.name.toLowerCase()).join(' y ')}.</span></p>`:''}
+    ${d.map(sec).join('')}
+    ${a.o?`<section class="rs"><h3>Observaciones del docente</h3><p>${esc(a.o)}</p></section>`:''}
+    <p class="muted small">${pend.length?`Falta evaluar: ${pend.map(o=>o.name.toLowerCase()).join(', ')}. `:''}Niveles y metas tomados de las rúbricas del SisAT (SEP, 2018). Este informe describe habilidades básicas; no es una calificación.</p>
+  </article>`;
+}
+function informeTexto(a){
+  const d=informeDatos(a), L=[`INFORME INDIVIDUAL SisAT`, `Alumno: ${a.n}`, `${S.g.escuela?S.g.escuela+' · ':''}${S.g.grado} ${S.g.grupo} · Ciclo ${S.g.ciclo} · ${S.g.apl} aplicación · ${hoy()}`, ''];
+  d.forEach(o=>{ L.push(o.name.toUpperCase());
+    if(!o.lv){ L.push('Sin evaluar todavía.',''); return; }
+    L.push(`Nivel: ${LV[o.lv]} (${o.sc} de ${o.max})`, o.txt);
+    if(o.k==='l'&&+a.s) L.push(`Tiempo de lectura: ${fmt(+a.s)}${ppmDe(a)?` · ${ppmDe(a)} palabras por minuto`:''}`);
+    if(o.k==='c') L.push(`${o.sc} de 10 respuestas correctas; ${o.vis} con tarjeta de apoyo visual.`, ...(o.err.items.length?['Errores:',...o.err.items.map(x=>'  - '+x),...o.err.notas]:[]));
+    o.comps.forEach(c=>L.push(`  - ${c.name}: ${c.v} (${c.label})`));
+    if(o.fort.length) L.push(`Fortalezas: ${o.fort.join(', ').toLowerCase()}.`);
+    L.push('Áreas de oportunidad:');
+    if(o.k==='c') L.push(`  - ${o.areas[0]}`); else if(!o.areas.length) L.push('  - Ninguna: alcanzó el máximo en todos los componentes.');
+    else o.areas.forEach(x=>L.push(`  - ${x.name} (${x.tipo}). Meta siguiente: ${x.meta}`));
+    L.push(''); });
+  if(a.o) L.push('OBSERVACIONES DEL DOCENTE', a.o);
+  return L.join('\n');
+}
+function viewInforme(){
+  if(!S.a.length) return `<div class="panel"><p class="muted">Aún no hay alumnos. Agréguelos en la pestaña Grupo.</p></div>`;
+  if(!S.a.some(x=>x.id===sel)) sel=S.a[0].id;
+  const a=S.a.find(x=>x.id===sel);
+  return `<div style="display:flex;flex-direction:column;gap:16px">
+    <div class="rowflex"><label class="small muted" for="repsel">Alumno</label><select class="inp" id="repsel" data-rep="1">${S.a.map(x=>`<option value="${x.id}"${x.id===sel?' selected':''}>${esc(x.n)}</option>`).join('')}</select>
+      ${S.a.length>1?`<button class="btn" data-a="next" data-k="next">Siguiente alumno</button>`:''}
+      ${dl?`<button class="btn pri" data-a="pdf" data-k="pdf">Descargar PDF</button>${S.a.length>1?`<button class="btn" data-a="pdfall" data-k="pdfall">PDF de todo el grupo</button>`:''}`:''}
+      <button class="btn${dl?'':' pri'}" data-a="repcopy" data-k="repcopy">Copiar como texto</button></div>
+    <p class="small" id="repmsg" role="status"></p>
+    <div class="panel">${informeHTML(a)}</div></div>`;
+}
+function csv(){
+  const q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const h=['Alumno',...LEC.map((c,i)=>'Lectura '+(i+1)),'Lectura total','Lectura nivel',...TXT.map((c,i)=>'Textos '+(i+1)),'Textos total','Textos nivel','Cálculo correctas','Cálculo con tarjeta','Cálculo nivel','Observaciones'];
+  const rows=S.a.map(a=>{const l=score(a,'l'),t=score(a,'t'),c=score(a,'c');
+    return [a.n,...a.l,l,l==null?'':LV[level(l,'l')],...a.t,t,t==null?'':LV[level(t,'t')],c,a.c.filter(x=>x==='v').length,c==null?'':LV[level(c,'c')],a.o]});
+  return [h,...rows].map(r=>r.map(q).join(',')).join('\n');
+}
+function viewDatos(){
+  return `<div class="grid3">
+    <div class="panel"><h2>Llevar a una hoja de cálculo</h2><p class="small">Copie la tabla completa (puntajes, totales y niveles) y péguela en Excel o Google Sheets.</p>
+      <div><button class="btn pri" data-a="copycsv" data-k="copycsv">Copiar tabla (CSV)</button></div></div>
+    <div class="panel"><h2>Respaldo</h2><p class="small">Los datos viven solo en este navegador. Copie el respaldo y guárdelo en un archivo o nota; para restaurar, péguelo aquí y presione Restaurar.</p>
+      <textarea id="bk" aria-label="Respaldo"></textarea>
+      <div class="rowflex"><button class="btn" data-a="copybk" data-k="copybk">Copiar respaldo</button><button class="btn" data-a="restore" data-k="restore">Restaurar lo pegado</button></div></div>
+    <div class="panel"><h2>Empezar de nuevo</h2><p class="small">Borra a todos los alumnos y sus capturas de este navegador. No se puede deshacer.</p>
+      <div class="rowflex">${confirmWipe?`<button class="btn danger" data-a="wipe" data-k="wipe">Sí, borrar todo</button><button class="btn" data-a="nowipe" data-k="nowipe">Cancelar</button>`:`<button class="btn danger" data-a="askwipe" data-k="askwipe">Borrar todo</button>`}</div></div>
+  </div>${msg?`<p class="note" style="margin-top:16px" role="status">${esc(msg)}</p>`:''}`;
+}
+function render(){
+  const k=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.k:null;
+  const bk=document.getElementById('bk'), bkv=bk?bk.value:'';
+  renderTabs();
+  document.getElementById('view').innerHTML= tab==='grupo'?viewResumen(): tab==='datos'?viewDatos(): tab==='informe'?viewInforme(): viewSkill(tab);
+  if(bkv&&document.getElementById('bk')) document.getElementById('bk').value=bkv;
+  mountAudio();
+  if(k){ const el=document.querySelector(`[data-k="${k}"]`); if(el) el.focus({preventScroll:true}); }
+}
+function touch(){ save(); render(); }
+function copy(text,ok){
+  const done=()=>{msg=ok;render()};
+  const fb=()=>{ const t=document.getElementById('bk'); if(t){t.value=text;t.focus();t.select();} msg='No se pudo copiar automáticamente: el texto está seleccionado en el cuadro de respaldo, cópielo con Ctrl+C.'; const m=document.querySelector('[role=status]'); if(m) m.textContent=msg; };
+  try{ navigator.clipboard.writeText(text).then(done,fb); }catch(e){ fb(); }
+}
+
+// ---------- Eventos ----------
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a]'); if(!b) return;
+  const act=b.dataset.a, a=S.a.find(x=>x.id===sel);
+  msg='';
+  if(act==='tab'){ tab=b.dataset.v; confirmDel=null; confirmWipe=false; render(); }
+  else if(act==='sel'){ sel=+b.dataset.v; confirmDel=null; render(); if(window.matchMedia('(max-width:860px)').matches) document.getElementById('ficha').scrollIntoView({behavior:'smooth',block:'start'}); }
+  else if(act==='inf'){ sel=+b.dataset.v; tab='informe'; confirmDel=null; render(); }
+  else if((act==='pdf'||act==='pdfall')&&dl){ const say=t=>{ const m=document.getElementById('repmsg'); if(m) m.textContent=t; };
+    if(!window.jspdf){ say('No se pudo cargar el generador de PDF. Revise su conexión y recargue la página.'); return; }
+    const list=act==='pdf'?(a?[a]:[]):S.a; if(!list.length) return;
+    let blob; try{ blob=pdfDoc(list).output('blob'); }catch(e){ say('No se pudo generar el PDF.'); return; }
+    const nom=(act==='pdf'?'Informe SisAT - '+a.n:'Informes SisAT - '+S.g.grado+' '+S.g.grupo).replace(/[\\/:*?"<>|]/g,'');
+    dl.save({filename:nom+'.pdf',data:blob}).then(()=>say('PDF guardado. Ya puede imprimirlo o enviarlo.'),err=>{ if(!err||err.code!=='declined') say('No se pudo guardar el PDF en esta vista.'); }); }
+  else if(act==='repcopy'&&a){ const say=t=>{ const m=document.getElementById('repmsg'); if(m) m.textContent=t; };
+    const fb=()=>{ const r=document.getElementById('rep'); if(r){ const rg=document.createRange(); rg.selectNodeContents(r); const s=getSelection(); s.removeAllRanges(); s.addRange(rg); } say('No se pudo copiar automáticamente: el informe quedó seleccionado, cópielo con Ctrl+C.'); };
+    try{ navigator.clipboard.writeText(informeTexto(a)).then(()=>say('Informe copiado. Péguelo en un documento, correo o mensaje.'),fb); }catch(e){ fb(); } }
+  else if(act==='tstart'&&a){ tm={id:a.id,t0:Date.now()}; clearInterval(tick);
+    tick=setInterval(()=>{ const c=document.getElementById('clock'); if(c&&tm&&tm.id===sel&&tab==='l') c.textContent=fmt((Date.now()-tm.t0)/1000); },100); render(); }
+  else if(act==='tstop'&&tm){ const A=S.a.find(x=>x.id===tm.id); if(A) A.s=Math.round((Date.now()-tm.t0)/100)/10; tm=null; clearInterval(tick); touch(); }
+  else if(act==='treset'&&a){ a.s=0; touch(); }
+  else if(act==='rec'){ const f=document.getElementById('rec'); if(f) f.click(); }
+  else if(act==='usedur'&&a){ const au=audios.get(a.id), d=au?au.el.duration:NaN;
+    if(isFinite(d)&&d>0){ a.s=Math.round(d*10)/10; touch(); } else { msg='No se pudo leer la duración de este audio. Use el cronómetro.'; render(); } }
+  else if(act==='delrec'&&a){ setAudio(a.id,null); idbOp('readwrite',s=>s.delete(a.id)); render(); }
+  else if(act==='next'&&S.a.length){ const i=S.a.findIndex(x=>x.id===sel); sel=S.a[(i+1)%S.a.length].id; render(); }
+  else if(act==='sug'&&a){ a.l[1]=+b.dataset.v; touch(); }
+  else if(act==='go'){ sel=+b.dataset.v; tab=b.dataset.s||'l'; confirmDel=null; render(); }
+  else if(act==='set'&&a){ const i=+b.dataset.i,v=+b.dataset.v,s=b.dataset.s; a[s][i]= a[s][i]===v?null:v; touch(); }
+  else if(act==='calc'&&a){ const i=+b.dataset.i,v=b.dataset.v; a.c[i]= a.c[i]===v?null:v; touch(); }
+  else if(act==='fillx'&&a){ a.c=a.c.map(x=>x==null?'x':x); touch(); }
+  else if(act==='askdel'){ confirmDel=+b.dataset.v; render(); }
+  else if(act==='nodel'){ confirmDel=null; render(); }
+  else if(act==='del'){ setAudio(confirmDel,null); const gone=confirmDel; idbOp('readwrite',s=>s.delete(gone)); S.a=S.a.filter(x=>x.id!==confirmDel); if(!S.a.some(x=>x.id===sel)) sel=S.a[0]?S.a[0].id:null; confirmDel=null; touch(); }
+  else if(act==='start'){ S={ej:false,g:Object.assign({},S.g),a:[]}; sel=null; touch(); const n=document.getElementById('nuevo'); if(n) n.focus(); }
+  else if(act==='copycsv'){ copy(csv(),'Tabla copiada. Péguela en su hoja de cálculo.'); }
+  else if(act==='copybk'){ copy(JSON.stringify(S),'Respaldo copiado. Guárdelo en un archivo o nota.'); }
+  else if(act==='restore'){ try{ const d=JSON.parse(document.getElementById('bk').value); if(!d||!Array.isArray(d.a)||!d.g) throw 0;
+      d.a.forEach(x=>{ if(!Array.isArray(x.l)||x.l.length!==6||!Array.isArray(x.t)||x.t.length!==6||!Array.isArray(x.c)||x.c.length!==10) throw 0; });
+      S=d; uid=Math.max(0,...S.a.map(x=>x.id))+1; sel=S.a[0]?S.a[0].id:null; document.getElementById('bk').value=''; msg='Respaldo restaurado: '+S.a.length+' alumnos.'; touch(); }
+    catch(e){ msg='Ese texto no es un respaldo válido. Pegue el respaldo completo, tal como se copió.'; render(); } }
+  else if(act==='askwipe'){ confirmWipe=true; render(); }
+  else if(act==='nowipe'){ confirmWipe=false; render(); }
+  else if(act==='wipe'){ Array.from(audios.keys()).forEach(id=>setAudio(id,null)); idbOp('readwrite',s=>s.clear()); S={ej:false,g:Object.assign({},S.g),a:[]}; sel=null; confirmWipe=false; msg='Se borraron todos los alumnos.'; touch(); }
+});
+document.addEventListener('toggle',ev=>{ if(ev.target.classList&&ev.target.classList.contains('pqs')) { const was=pqOpen; pqOpen=ev.target.open; if(was&&!pqOpen) render(); } },true);
+document.addEventListener('submit',ev=>{
+  if(ev.target.id!=='addform') return; ev.preventDefault();
+  const inp=document.getElementById('nuevo'), n=inp.value.trim(); if(!n) return;
+  const a={id:uid++,n,l:Array(6).fill(null),t:Array(6).fill(null),c:Array(10).fill(null),o:''};
+  S.a.push(a); sel=a.id; touch(); document.getElementById('nuevo').focus();
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target, a=S.a.find(x=>x.id===sel);
+  if(t.dataset.g){ S.g[t.dataset.g]=t.value; touch(); }
+  else if(t.dataset.n&&a){ a.n=t.value.trim()||a.n; touch(); }
+  else if(t.dataset.rep){ sel=+t.value; render(); }
+  else if((t.dataset.et||t.dataset.er)&&a){ const i=+(t.dataset.et||t.dataset.er); a.ce=a.ce||[]; a.ce[i]=Object.assign({},a.ce[i],t.dataset.et?{t:t.value}:{r:t.value.trim()}); if(t.dataset.et) touch(); else save(); }
+  else if(t.dataset.pq||t.dataset.pr){ const i=+(t.dataset.pq||t.dataset.pr), g=S.g.grado; S.g.pq=S.g.pq||{}; const L=S.g.pq[g]=S.g.pq[g]||[]; L[i]=L[i]||[null,null]; L[i][t.dataset.pq?0:1]=t.value.trim(); save(); }
+  else if(t.dataset.rec&&a){ const f=t.files&&t.files[0]; if(f){ setAudio(a.id,f); const id=a.id; idbOp('readwrite',s=>s.put(f,id)); msg=''; render(); } }
+  else if(t.dataset.e&&a){ a.e=t.value; touch(); }
+  else if(t.dataset.o&&a){ a.o=t.value; save(); }
+});
+renderFields(); render();
+</script>
