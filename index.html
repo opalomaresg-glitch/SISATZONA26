@@ -176,6 +176,40 @@ textarea{width:100%;min-height:120px;background:var(--surface);border:1px solid 
 .lbl{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);font-weight:600;min-width:0}
 .lbl .inp{font-weight:400;color:var(--ink);width:100%}
 .warn{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 10px}
+.tbtn{flex:none;padding:4px 10px;font-size:.8rem} .pqrow{flex-wrap:wrap}
+#tarj{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:#fff;color:#000}
+#tarj .tbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top,0px));font-size:.9rem;color:#566080}
+#tarj .tbtns{display:flex;gap:8px}
+#tarj button{font:inherit;min-width:48px;min-height:44px;padding:0 14px;border:1px solid #c7cde0;border-radius:8px;background:#f2f4f9;color:#17203a;cursor:pointer}
+#tarj .tbody{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:2vh 4vw;cursor:pointer}
+#tarj .ttxt{font-family:var(--display);font-weight:700;line-height:1.15;text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#tarj img{max-width:100%;max-height:100%;object-fit:contain}
+#tarj .tprog{height:8px;background:#e9edf5;margin-bottom:env(safe-area-inset-bottom,0px)} #tarj .tprog i{display:block;height:100%;background:#2b4acb}
+.tri{display:flex;gap:6px}
+.tri button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 4px;cursor:pointer;font-weight:600;font-size:.85rem}
+.tri button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+#lec{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:#fff;color:#111}
+#lec .lbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top,0px));border-bottom:1px solid #d6dcea;font-size:.95rem;color:#17203a}
+#lec .ltit{font-weight:700;min-width:0}
+#lec .lctl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+#lec button{font:inherit;min-height:44px;padding:0 14px;border:1px solid #c7cde0;border-radius:8px;background:#f2f4f9;color:#17203a;cursor:pointer}
+#lec button.pri{background:#2b4acb;border-color:#2b4acb;color:#fff}
+#lec button:disabled{opacity:.5;cursor:default}
+#lec .lclock{font-family:var(--display);font-weight:700;font-size:1.4rem;font-variant-numeric:tabular-nums;min-width:5.5rem}
+#lec .lbody{flex:1;min-height:0;overflow-y:auto;padding:16px max(16px,4vw);padding-bottom:max(32px,env(safe-area-inset-bottom,0px));line-height:1.7;width:100%;margin:0 auto}
+#lec .lbody.alumno{font-size:calc(var(--lf,2.4)*1rem);max-width:46em}
+#lec .lbody.alumno h2{font-size:1.2em;margin:0 0 .6em;font-family:var(--display);color:#111}
+#lec .lbody.aplicar{font-size:1.5rem;max-width:52rem}
+#lec .lbody p{margin:0 0 1em}
+#lec .lw{cursor:pointer;border-radius:6px;padding:2px 3px} #lec .lw:hover{background:#e5eafc}
+#lec .lw.err{background:#fbdfdc;color:#a8231c;font-weight:700;text-decoration:underline}
+@media (max-width:520px){#lec .ltit{flex:1 1 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #lec .lbar{gap:4px 8px;padding:6px 12px;padding-top:max(6px,env(safe-area-inset-top,0px))} #lec button{min-height:40px;padding:0 10px;font-size:.9rem} #lec .lclock{font-size:1.15rem;min-width:4.6rem}}
+#lec .lbody p.lfuente{font-size:.4em;color:#566080;line-height:1.4;margin-top:2em}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px}
+.thumb{display:flex;flex-direction:column;gap:6px;align-items:center}
+.thumb img{width:110px;height:140px;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:8px;background:#fff}
+#lec .lbody{overflow-x:auto}
+#lec .lbody img.limg{display:block;width:calc(var(--lf,2.4) / 2.4 * 100%);max-width:none;margin:0 auto 12px}
 footer{font-size:.82rem;color:var(--muted);max-width:75ch}
 </style>
 
@@ -352,7 +386,7 @@ let tm=null, tick=null;
 const fmt=s=>{ s=Math.max(0,s); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor(s*10%10); };
 const audios=new Map();
 let idb=null;
-try{ const rq=indexedDB.open('sisat-audio',1); rq.onupgradeneeded=()=>rq.result.createObjectStore('a'); rq.onsuccess=()=>{ idb=rq.result; loadAudio(sel); }; }catch(e){}
+try{ const rq=indexedDB.open('sisat-audio',2); rq.onupgradeneeded=()=>{ const d=rq.result; if(!d.objectStoreNames.contains('a')) d.createObjectStore('a'); if(!d.objectStoreNames.contains('img')) d.createObjectStore('img'); }; rq.onsuccess=()=>{ idb=rq.result; loadAudio(sel); if(tab==='c'||tab==='l') render(); }; }catch(e){}
 function idbOp(mode,fn){ return new Promise(res=>{ if(!idb) return res(null); try{ const r=fn(idb.transaction('a',mode).objectStore('a')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); }catch(e){ res(null); } }); }
 function setAudio(id,blob){
   const old=audios.get(id); if(old){ old.el.pause(); URL.revokeObjectURL(old.url); audios.delete(id); }
@@ -445,7 +479,7 @@ function capture(a,k){
   return `<div class="skillhead"><input class="inp" id="nombre" data-n="1" value="${esc(a.n)}" aria-label="Nombre" style="font-weight:700;font-size:1.05rem;flex:1;min-width:10rem">
       ${S.a.length>1?`<button class="btn pri" data-a="next" data-k="next">Siguiente alumno</button>`:''}</div>
     <p class="muted small">Alumno ${S.a.indexOf(a)+1} de ${S.a.length} · ${SK[k].name}</p>
-    ${interp}${k==='l'?fluidez(a):''}${body}
+    ${interp}${k==='l'?fluidez(a)+lecAlumno(a):''}${body}
     <div class="skill"><label class="cn" for="obs">Observaciones</label><textarea id="obs" data-o="1" style="font-family:var(--body);font-size:.92rem;min-height:70px" placeholder="${k==='c'?'Estrategia de cálculo que usó, preguntas donde dudó…':k==='l'?'Actitud ante la lectura, palabras donde se detuvo…':'Tipo de texto, qué le costó más…'}">${esc(a.o)}</textarea></div>`;
 }
 function semaforo(k,open){
@@ -491,7 +525,7 @@ function viewSkill(k){
   if(!S.a.some(x=>x.id===sel)) sel=S.a[0].id;
   const a=S.a.find(x=>x.id===sel);
   const rows=S.a.map(x=>{const sc=score(x,k);return `<tr class="row${x.id===sel?' sel':''}" data-a="sel" data-v="${x.id}"><td><button class="rowbtn" data-a="sel" data-v="${x.id}" data-k="row-${x.id}">${esc(x.n)}</button></td><td style="width:96px">${profile(x,k)}</td><td>${pill(level(sc,k),sc,SK[k].max)}</td></tr>`}).join('');
-  return `<div class="space ev-${k}">${guide}
+  return `<div class="space ev-${k}">${guide}${k==='c'?tarjetasPanel():k==='l'?lecturaPanel():''}
     <div class="cols">
       <div class="panel"><h2>Alumnos</h2><div class="scroll"><table><thead><tr><th>Alumno</th><th>${k==='c'?'Preguntas':'Componentes'}</th><th>Nivel</th></tr></thead><tbody>${rows}</tbody></table></div>
         <div class="legend">${['e','d','r'].map(l=>`<span class="pill ${l}"><i></i>${LV[l]}</span>`).join('')}</div></div>
@@ -571,10 +605,10 @@ function calcRows(a){
   const ce=a.ce||[];
   return `<details class="pqs"${pqOpen?' open':''}><summary>Preguntas de ${esc(S.g.grado)} (ver o editar)</summary>
       <p class="muted small">Se usan para todo el grupo. Las de 1.º a 4.º de primaria vienen del manual; verifique las demás con su cuadernillo y escriba las que falten.</p>
-      ${a.c.map((x,i)=>{const [p,r]=pq(i);return `<div class="pqrow"><span class="qn">${i+1}</span><input class="inp" id="pq-${i}" data-pq="${i}" value="${esc(p)}" placeholder="Pregunta" aria-label="Pregunta ${i+1}"><input class="inp" id="pr-${i}" data-pr="${i}" value="${esc(r)}" placeholder="Respuesta" aria-label="Respuesta ${i+1}"></div>`}).join('')}</details>
+      ${a.c.map((x,i)=>{const [p,r]=pq(i);return `<div class="pqrow"><span class="qn">${i+1}</span><input class="inp" id="pq-${i}" data-pq="${i}" value="${esc(p)}" placeholder="Pregunta" aria-label="Pregunta ${i+1}"><input class="inp" id="pr-${i}" data-pr="${i}" value="${esc(r)}" placeholder="Respuesta" aria-label="Respuesta ${i+1}">${timgBtns(i)}</div>`}).join('')}</details>
     <div class="qlist">${a.c.map((x,i)=>{const [p,r]=pq(i), e=ce[i]||{};
       return `<div class="qrow"><div class="qmain"><span class="qn">${i+1}</span><span class="qt">${p?esc(p):'<span class="muted">Pregunta sin texto</span>'}${r?` <span class="muted small">${esExpr(p)?'=':'· respuesta:'} ${esc(r)}</span>`:''}</span>
-        <span class="qb">${[['c','✓','Correcta'],['v','T','Correcta con tarjeta'],['x','✗','Incorrecta']].map(([v,s,t])=>`<button class="${v}" title="${t}" aria-label="Pregunta ${i+1}: ${t}" aria-pressed="${x===v}" data-a="calc" data-i="${i}" data-v="${v}" data-k="q-${i}-${v}">${s}</button>`).join('')}</span></div>
+        ${p||timgs.has(tKey(i))?`<button class="btn tbtn" type="button" data-a="tarj" data-i="${i}" data-k="tarj-${i}" aria-label="Mostrar al alumno la tarjeta de la pregunta ${i+1}">Tarjeta</button>`:''}<span class="qb">${[['c','✓','Correcta'],['v','T','Correcta con tarjeta'],['x','✗','Incorrecta']].map(([v,s,t])=>`<button class="${v}" title="${t}" aria-label="Pregunta ${i+1}: ${t}" aria-pressed="${x===v}" data-a="calc" data-i="${i}" data-v="${v}" data-k="q-${i}-${v}">${s}</button>`).join('')}</span></div>
         ${x==='x'?`<div class="qerr"><select class="inp" id="et-${i}" data-et="${i}" aria-label="Tipo de error en la pregunta ${i+1}"><option value="">Tipo de error…</option>${Object.entries(ETIPO).map(([k,t])=>`<option value="${k}"${e.t===k?' selected':''}>${t}</option>`).join('')}</select><input class="inp" id="er-${i}" data-er="${i}" value="${esc(e.r||'')}" placeholder="¿Qué respondió?" aria-label="Respuesta del alumno en la pregunta ${i+1}"></div>`:''}</div>`}).join('')}</div>`;
 }
 // ---------- Informe en PDF ----------
@@ -620,6 +654,360 @@ function pdfDoc(alumnos){
     y+=2; text('Niveles y metas tomados de las rúbricas del SisAT (SEP, 2018). Este informe describe habilidades básicas; no es una calificación.',{size:8,color:GRAY});
   });
   return doc;
+}
+// ---------- Importar lecturas del manual (PDF) ----------
+// Las lecturas no vienen incluidas en la app: se leen del PDF del manual de la SEP que el docente elige.
+// El archivo se procesa en este dispositivo y no se sube a ningún lado.
+let pdfjsListo=null;
+// Cada aplicación (momento) tiene sus propias lecturas; la primera usa la clave del grado sola.
+const lk=(g,ap)=>ap&&ap!=='Primera'?g+'|'+ap:g;
+async function paginaImagen(pdf,i){
+  const pg=await pdf.getPage(i), vp=pg.getViewport({scale:2}), cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+  const c=cv.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,cv.width,cv.height);
+  await pg.render({canvasContext:c,viewport:vp,intent:'print'}).promise;
+  return new Promise(r=>cv.toBlob(r,'image/jpeg',0.88));
+}
+function cargarPdfJs(){
+  if(window.pdfjsLib){ pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js'; return Promise.resolve(); }
+  if(pdfjsListo) return pdfjsListo;
+  pdfjsListo=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='vendor/pdf.min.js'; s.onload=()=>{ pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js'; res(); }; s.onerror=()=>{ pdfjsListo=null; rej(new Error('No se pudo cargar el lector de PDF.')); }; document.head.appendChild(s); });
+  return pdfjsListo;
+}
+const RX_GRADO=/(PRIMER|SEGUNDO|TERCER|CUARTO|QUINTO|SEXTO)\s+GRADO/;
+const GR_NUM={PRIMER:1,SEGUNDO:2,TERCER:3,CUARTO:4,QUINTO:5,SEXTO:6};
+const SUP=/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g;
+function unirLinea(a,b){ return /[A-Za-zÁÉÍÓÚÜáéíóúüñÑ]-$/.test(a)&&/^[a-záéíóúüñ]/.test(b)?a.slice(0,-1)+b:(a?a+' ':'')+b; }
+function modaH(lineas){ const c={}; lineas.forEach(l=>{ const k=Math.round(l.h); c[k]=(c[k]||0)+l.t.length; }); const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; return k===undefined?0:+k; }
+function lineasPdf(tc,H){
+  const L=[];
+  tc.items.forEach(x=>{ if(typeof x.str!=='string'||!x.str) return; const y=x.transform[5], h=Math.abs(x.transform[3])||x.height||0; let l=L.find(q=>Math.abs(q.y-y)<2.5); if(!l){ l={y,its:[]}; L.push(l); } l.its.push({s:x.str,x:x.transform[4],w:x.width||0,h}); });
+  L.sort((a,b)=>b.y-a.y);
+  return L.map(l=>{
+    l.its.sort((a,b)=>a.x-b.x); let t='', fin=null; const hh={};
+    l.its.forEach(i=>{ if(fin!==null&&i.x-fin>i.h*0.15&&!/\s$/.test(t)&&!/^\s/.test(i.s)) t+=' '; t+=i.s; fin=i.x+i.w; const k=Math.round(i.h*2)/2; hh[k]=(hh[k]||0)+i.s.length; });
+    const h=+Object.keys(hh).sort((a,b)=>hh[b]-hh[a])[0];
+    t=t.replace(/[ﬁ]/g,'fi').replace(/[ﬂ]/g,'fl').replace(/ﬀ/g,'ff').replace(/ﬃ/g,'ffi').replace(/ﬄ/g,'ffl');
+    return {y:l.y,h,t:t.replace(/\s+/g,' ').trim(),pie:l.y<=H*0.085};
+  }).filter(l=>l.t);
+}
+// Une las líneas del cuerpo en párrafos: un salto mayor que el interlineado normal marca párrafo nuevo.
+function armarParrafos(cuerpo){
+  const gaps=[]; for(let i=1;i<cuerpo.length;i++){ if(cuerpo[i].p===cuerpo[i-1].p){ const d=cuerpo[i-1].y-cuerpo[i].y; if(d>0) gaps.push(d); } }
+  const umbral=(gaps.length?Math.min(...gaps):15)*1.35, paras=[]; let cur='';
+  cuerpo.forEach((l,i)=>{
+    if(!i){ cur=l.t; return; }
+    const prev=cuerpo[i-1], corte=l.p===prev.p?(prev.y-l.y)>umbral:/[.?!:;»”"…)]$/.test(prev.t);
+    if(corte){ paras.push(cur); cur=l.t; } else cur=unirLinea(cur,l.t);
+  });
+  if(cur) paras.push(cur);
+  return paras.map(p=>p.replace(SUP,'').trim()).filter(Boolean);
+}
+function recortarEncabezado(L,primera){
+  if(!primera) return L;
+  const k=L.findIndex(l=>/haga el registro\.?$/i.test(l.t));
+  return k>=0?L.slice(k+1):L.filter(l=>!/^(ANEXO 1|MATERIALES PARA LA TOMA DE LECTURA)$/i.test(l.t)&&!/^INSTRUCCIONES:/i.test(l.t)&&!RX_GRADO.test(l.t));
+}
+// Formato de primaria: lectura y, en la página siguiente, "Guía de preguntas" con "Total de palabras".
+function extraerLectura(pags,r,g){
+  const filas=[];
+  for(let p=r;p<g;p++) recortarEncabezado(pags[p].filter(l=>!l.pie),p===r).forEach(l=>filas.push({...l,p}));
+  if(!filas.length) return null;
+  const base=modaH(filas), tit=[], cred=[], cuerpo=[];
+  filas.forEach(l=>{ if(l.h>=base+1.5&&!cuerpo.length) tit.push(l.t); else if(l.h<=base-1.2) cred.push(l.t); else cuerpo.push(l); });
+  return {titulo:tit.join(' ').trim(),texto:armarParrafos(cuerpo).join('\n'),fuente:cred.join(' ').trim()};
+}
+function extraerPreguntas(L,desde){
+  const pregs=[]; let cur=null, op=null, activo=!desde;
+  for(const l of L){
+    if(l.pie) continue; const t=l.t;
+    if(/^Total de palabras/i.test(t)) break;
+    let m=t.match(/^(\d{1,2})(?:\.\s*|\s+)(\S.*)$/);
+    if(m){ cur={n:+m[1],t:m[2],o:[]}; op=null; pregs.push(cur); continue; }
+    if(!cur) continue;
+    m=t.match(/^([a-dA-D])\)\s*(.*)$/);
+    if(m){ op={l:m[1].toLowerCase(),t:m[2]}; cur.o.push(op); continue; }
+    if(op) op.t=unirLinea(op.t,t); else cur.t=unirLinea(cur.t,t);
+  }
+  return pregs.map(q=>(q.t+(q.o.length?' '+q.o.map(o=>`(${o.l}) ${o.t.trim()}`).join('; '):'')).replace(SUP,'').replace(/\s+/g,' ').trim()).filter(Boolean);
+}
+// Formato de secundaria: la lectura termina con "N PALABRAS" y las preguntas siguen en la misma página.
+function extraerLecturaSec(pags,r,e){
+  const filas=[];
+  for(let p=r;p<=e;p++) recortarEncabezado(pags[p].filter(l=>!l.pie),p===r).forEach(l=>filas.push({...l,p}));
+  const iP=filas.findIndex(l=>l.p===e&&/^\d{2,4}\s+PALABRAS$/.test(l.t));
+  if(iP<0) return null;
+  const antes=filas.slice(0,iP), despues=filas.slice(iP+1);
+  const base=modaH(antes.filter(l=>l.h>=8));
+  const util=antes.filter(l=>l.h>base-3);
+  if(util.length<2) return null;
+  const titulo=util[0].t, resto=util.slice(1);
+  const cred=resto.filter(l=>l.h<=base-1.2).map(l=>l.t.replace(/^\d\s+(?=[A-ZÁÉÍÓÚ])/,'')), cuerpo=resto.filter(l=>l.h>base-1.2);
+  const baseQ=modaH(despues.filter(l=>l.h>=8)), preg=despues.filter(l=>l.h>=baseQ-0.6);
+  const pal=+filas[iP].t.match(/^(\d+)/)[1];
+  return {titulo,texto:armarParrafos(cuerpo).join('\n'),fuente:cred.join(' ').trim(),pal,preguntas:extraerPreguntas(preg,true)};
+}
+async function leerManual(file,prog){
+  await cargarPdfJs();
+  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  const pags=[];
+  for(let i=1;i<=pdf.numPages;i++){ const pg=await pdf.getPage(i); pags.push(lineasPdf(await pg.getTextContent(),pg.view[3]-pg.view[1])); if(prog&&i%6===0) prog(i,pdf.numPages); }
+  const txt=pags.map(L=>L.map(l=>l.t).join(' '));
+  const lecturas=[]; let sec=0, pri=0;
+  const nivelDe=r=>{ const t=pags[r].map(l=>l.t).join(' '); if(/SECUNDARIA/i.test(t)&&!/PRIMARIA/i.test(t)) sec++; else if(/PRIMARIA/i.test(t)) pri++; };
+  const inicio=(fin)=>{ let r=fin; while(r>0&&fin-r<4&&!(RX_GRADO.test(txt[r])&&/MATERIALES PARA LA TOMA DE LECTURA/i.test(txt[r]))) r--; return RX_GRADO.test(txt[r])?r:-1; };
+  txt.forEach((t,gi)=>{
+    const m=t.match(/Total de palabras de la lectura:\s*(\d+)/i); if(!m||!/Gu[ií]a de preguntas/i.test(t)) return;
+    const r=inicio(gi-1); if(r<0) return;
+    const lec=extraerLectura(pags,r,gi); if(!lec||!lec.texto) return;
+    nivelDe(r); lecturas.push({n:GR_NUM[txt[r].match(RX_GRADO)[1]],pal:+m[1],preguntas:extraerPreguntas(pags[gi],false),...lec});
+  });
+  if(!lecturas.length) txt.forEach((t,e)=>{
+    if(!/\b\d{2,4}\s+PALABRAS\b/.test(t)) return;
+    const r=inicio(e); if(r<0) return;
+    const lec=extraerLecturaSec(pags,r,e); if(!lec||!lec.texto) return;
+    nivelDe(r); lecturas.push({n:GR_NUM[txt[r].match(RX_GRADO)[1]],...lec});
+  });
+  // Formato de los cuadernillos por momento: "Texto para el alumno", "Texto para el aplicador" y "Guía de preguntas" por grado.
+  // Cuando la lectura viene como imagen dentro del PDF, se guarda la página del alumno como imagen.
+  if(!lecturas.length){
+    const comp=txt.map(t=>t.replace(/\s+/g,'').toUpperCase()), GR=['PRIMER','SEGUNDO','TERCER','CUARTO','QUINTO','SEXTO'];
+    const limpiaF=s=>s.replace(/h\u0000ps:/g,'https:').replace(/[\u0000-\u001f]/g,'');
+    for(let n=1;n<=6;n++){
+      const g=GR[n-1]+'GRADO', iA=comp.findIndex(t=>t.includes('TEXTOPARAELALUMNO'+g)), iP=comp.findIndex(t=>t.includes('TEXTOPARAELAPLICADOR'+g)), iG=comp.findIndex(t=>/GU[IÍ]ADEP+REGUNTAS/.test(t)&&t.includes(g));
+      if(iA<0&&iP<0) continue;
+      const src=iP>=0?iP:iA, m=txt[src].match(/Total de palabras de la lectura:\s*(\d+)/i);
+      const L=pags[src].filter(l=>!l.pie).slice(1).filter(l=>!/^Total de palabras/i.test(l.t)).map(l=>({...l,p:src}));
+      const grandes=L.filter(l=>l.h>=12), hayTexto=grandes.reduce((s,l)=>s+l.t.length,0)>200;
+      let titulo='', texto='', img=null;
+      if(hayTexto){ const base=modaH(grandes); titulo=grandes.filter(l=>l.h>=base+1.5).map(l=>l.t).join(' '); texto=armarParrafos(grandes.filter(l=>l.h<base+1.5)).join('\n'); }
+      // Si el texto leído no cuadra con el total declarado (columnas, letras que el PDF no entrega), se usa la imagen de la página.
+      if(texto&&m&&Math.abs(contarPal(texto)-(+m[1]))>Math.max(3,Math.round(+m[1]*0.03))) texto='';
+      if(!texto) img=await paginaImagen(pdf,(iA>=0?iA:iP)+1);
+      nivelDe(src);
+      lecturas.push({n,pal:m?+m[1]:0,titulo,texto,fuente:limpiaF(L.filter(l=>l.h<12).map(l=>l.t).join(' ')),img,preguntas:iG>=0?extraerPreguntas(pags[iG],false):[]});
+    }
+  }
+  return {nivel:sec>pri?'secundaria':'primaria',lecturas};
+}
+function aplicarLecturas(res,apl){
+  const puestas=[], conservadas=[], avisos=[];
+  res.lecturas.forEach(r=>{
+    const g=`${r.n}.º ${res.nivel}`; if(!GRADOS.includes(g)) return;
+    S.g.lect=S.g.lect||{}; const key=lk(g,apl), cur=S.g.lect[key];
+    if(cur&&cur.x&&!cur.ej&&!cur.imp){ conservadas.push(g); return; }
+    const mia=contarPal(r.texto), ok=!r.texto||r.pal&&Math.abs(r.pal-mia)<=Math.max(3,Math.round(r.pal*0.03));
+    if(r.pal&&!ok) avisos.push(`En ${g} el total del manual (${r.pal}) no coincide con el texto (${mia}); se usó el conteo del texto.`);
+    S.g.lect[key]={t:r.titulo,x:r.texto,q:r.preguntas.join('\n'),f:r.fuente,pal:ok?r.pal:0,imp:true};
+    if(r.img){ (limgs.get(key)||[]).forEach(x=>URL.revokeObjectURL(x.u)); limgs.set(key,[{b:r.img,u:URL.createObjectURL(r.img)}]); limgLoad.add(key); idbImg('readwrite',s=>s.put([r.img],'lec|'+key)); }
+    puestas.push(g+(r.img?' (imagen)':''));
+  });
+  const Lg=S.g.lect&&S.g.lect[lk(S.g.grado,S.g.apl)]; if(Lg&&(Lg.x||Lg.pal)) S.g.palabras=Lg.pal||contarPal(Lg.x);
+  save(); return {puestas,conservadas,avisos};
+}
+async function importarManual(file){
+  const say=t=>{ const m=document.getElementById('lecmsg'); if(m) m.textContent=t; };
+  say('Leyendo el manual… puede tardar unos segundos.');
+  let res;
+  try{ res=await leerManual(file,(i,n)=>say(`Leyendo el manual… página ${i} de ${n}.`)); }
+  catch(e){ say('No se pudo leer ese archivo. Elija el PDF del manual de exploración de habilidades básicas.'); return; }
+  if(!res.lecturas.length){ say('No se encontraron lecturas en ese PDF. Elija el manual de exploración de habilidades básicas (primaria o secundaria), que incluye el Anexo 1.'); return; }
+  const apl=/segund/i.test(file.name)?'Segunda':/tercer\s*momento|3er/i.test(file.name)?'Tercera':S.g.apl;
+  const r=aplicarLecturas(res,apl); render();
+  const m=document.getElementById('lecmsg');
+  if(m) m.textContent=`Se cargaron ${r.puestas.length} ${r.puestas.length===1?'lectura':'lecturas'} (${r.puestas.join(', ')||'ninguna'}) para la ${apl.toLowerCase()} aplicación.`+(apl!==S.g.apl?` Para verlas, cambie “Aplicación” a ${apl} en el encabezado.`:'')+(r.conservadas.length?` Se conservó el texto que ya había escrito en ${r.conservadas.join(', ')}.`:'')+(r.avisos.length?' '+r.avisos.join(' '):'');
+}
+// ---------- Lectura del grado: texto, errores y comprensión ----------
+// El texto de cada grado lo pega el docente (el manual de la SEP trae una lectura por grado en su Anexo 1).
+// Solo se incluye un texto de ejemplo, propio de esta app, para probar la herramienta.
+const LEC_EJ={t:'La tortuga y la lluvia',x:'Una mañana de verano, la tortuga Dora salió de su casa para buscar hojas frescas. El cielo estaba claro y el camino parecía tranquilo. De pronto, unas nubes grises cubrieron el sol y comenzó a caer una lluvia fuerte.\nDora no tenía paraguas, pero recordó que la rana Lola vivía cerca del río. Caminó despacio entre los charcos hasta llegar a su casa. Lola abrió la puerta y le ofreció una taza de té caliente.\nMientras esperaban a que parara la lluvia, las dos amigas conversaron y rieron. Cuando salió el arcoíris, Dora volvió a su casa con las hojas más frescas del jardín de Lola.'};
+const PREG_COMP=[
+  '¿De qué trata el texto? Cuéntalo con tus palabras.',
+  '¿Quiénes o qué aparecen en el texto?',
+  '¿Dónde o en qué momento sucede?',
+  '¿Qué pasó primero, qué pasó después y cómo termina?',
+  'Dime un detalle importante que recuerdes del texto.',
+  '¿Qué crees que quiso decir o enseñar el texto? ¿Por qué?'
+];
+const CIND=['Identifica las ideas o detalles relevantes','Reconoce personajes, escenarios o la resolución del tema','Su recuerdo sigue el orden del texto'];
+let lMode='', lA=null, lSize=2.4, lSet=new Set(), lWords=0, lTick=null, lPrev=null, confirmLec=false;
+const contarPal=x=>(String(x||'').trim().match(/\S+/g)||[]).length;
+const lectG=()=>{ S.g.lect=S.g.lect||{}; const k=lk(S.g.grado,S.g.apl); return S.g.lect[k]||(S.g.lect[k]={t:'',x:'',q:''}); };
+const g12=()=>/^[12]\.º primaria/.test(S.g.grado);
+function preguntasDe(L){ const own=String(L.q||'').split('\n').map(s=>s.trim()).filter(Boolean); if(own.length) return own; return g12()?[0,1,4].map(i=>PREG_COMP[i]):PREG_COMP; }
+function tokens(x){ let i=0; return String(x||'').split(/\n+/).map(p=>(p.match(/\S+/g)||[]).map(w=>({w,i:i++}))).filter(p=>p.length); }
+function lecturaPanel(){
+  const L=lectG(), n=contarPal(L.x), own=!!String(L.q||'').trim();
+  return `<div class="panel"><h2 class="hic ev-l">${ICON.l}Lectura del grado</h2>
+    <p class="small">Texto que lee el alumno en ${esc(S.g.grado)} y preguntas de comprensión. Las lecturas del manual de la SEP (Anexo 1) no vienen incluidas en la app: cárguelas desde su copia del manual en PDF o pegue el texto.</p>
+    <div class="rowflex"><button class="btn pri" data-a="lecpdf" data-k="lecpdf">Cargar lecturas del manual (PDF)</button><input id="lecpdf" type="file" accept="application/pdf,.pdf" hidden data-lecpdf="1" aria-label="Manual SisAT en PDF"></div>
+    <p class="small" id="lecmsg" role="status"></p>
+    <p class="muted small">Elija el PDF del manual de exploración de habilidades básicas (primaria o secundaria) o el cuadernillo de lecturas de otro momento. Si el nombre del archivo dice “segundo momento”, se guardan en la segunda aplicación. Se lee en este dispositivo y no se sube a ningún lado. Carga las lecturas de todos los grados, con sus preguntas y el total de palabras.</p>
+    <p class="small"><b>${esc(S.g.grado)} · ${esc(S.g.apl)} aplicación.</b> Cada aplicación guarda sus propias lecturas; se cambia en “Aplicación”, en el encabezado.</p>
+    ${L.imp?`<p class="small">Lectura tomada del PDF cargado.${L.f?` Fuente: ${esc(L.f)}`:''}${L.pal?` Total de palabras según el manual: ${L.pal}.`:''}</p>`:''}
+    ${L.ej?`<p class="warn small">Es un texto de ejemplo para probar la herramienta. No es una lectura oficial del SisAT: no lo use para evaluar.</p>`:''}
+    <label class="lbl">Título<input class="inp" id="lec-t" data-lt="1" value="${esc(L.t||'')}"></label>
+    <label class="lbl">Texto de la lectura<textarea id="lec-x" data-lx="1" style="min-height:140px;font-family:var(--body);font-size:.95rem" placeholder="Pegue aquí el texto de la lectura">${esc(L.x||'')}</textarea></label>
+    <p class="small muted">${n?`${n} palabras. Se usan para calcular el porcentaje de errores y las palabras por minuto.`:'Todavía no hay texto.'}</p>
+    <div class="rowflex">${n||limgDe().length?`<button class="btn pri" data-a="lecver" data-k="lecver">Mostrar al alumno</button>`:''}<button class="btn" data-a="lecej" data-k="lecej">Cargar texto de ejemplo</button>
+      ${L.x?(confirmLec?`<button class="btn danger" data-a="lecdel2" data-k="lecdel2">Sí, borrar texto</button><button class="btn" data-a="lecno" data-k="lecno">Cancelar</button>`:`<button class="btn danger" data-a="lecdel" data-k="lecdel">Borrar texto</button>`):''}</div>
+    ${limgPanel()}
+    <div class="skill"><b>Preguntas de comprensión</b>
+      <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px">${preguntasDe(L).map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
+      <p class="muted small">${own?'Son las preguntas que usted escribió.':'Son preguntas guía generales, redactadas para esta app a partir de la rúbrica; no son las preguntas oficiales de cada texto.'}${g12()?' En 1.º y 2.º solo se considera si identifica ideas o detalles.':''} Según el manual, si con la primera pregunta el alumno identifica ideas o detalles relevantes, reconoce personajes, escenario o resolución y sigue el orden del texto, no hace falta continuar con las demás.</p>
+      <label class="lbl">Escriba aquí las preguntas del manual para este texto, una por línea<textarea id="lec-q" data-lq="1" style="min-height:90px;font-family:var(--body);font-size:.92rem">${esc(L.q||'')}</textarea></label></div></div>`;
+}
+function lecAlumno(a){
+  const L=lectG(), n=contarPal(L.x), inds=g12()?CIND.slice(0,1):CIND, v=a.ci||[null,null,null];
+  const ok=inds.every((_,i)=>v[i]!=null);
+  const sug=ok?(inds.every((_,i)=>v[i]===2)?3:inds.every((_,i)=>v[i]===0)?1:2):null;
+  const marcados=a.ewn===n&&Array.isArray(a.ew);
+  const errs=!n?'':marcados?`${a.e||0} errores marcados de ${n} palabras`:(a.e!==''&&a.e!=null?`${a.e} errores registrados`:'Sin errores marcados todavía');
+  return `<div class="fluid" style="background:var(--sunk)"><div class="cn">Lectura del alumno y comprensión</div>
+    ${n?`<div class="rowflex"><button class="btn pri" data-a="lecapl" data-k="lecapl">Aplicar lectura y marcar errores</button><span class="small">${errs}</span></div>`:`${limgDe().length?`<div class="rowflex"><button class="btn pri" data-a="lecver" data-k="lecver2">Mostrar lectura al alumno</button></div><p class="small">La lectura está como imagen: no se pueden marcar errores palabra por palabra. Cuente los errores y anótelos en Precisión, más abajo, junto con el total de palabras.</p>`:`<p class="small">Escriba o cargue la lectura del grado en “Lectura del grado”, más arriba, para marcar errores palabra por palabra.</p>`}`}
+    <div><b class="small">Preguntas de comprensión</b><ol class="small" style="margin:4px 0 0;padding-left:20px">${preguntasDe(L).map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>
+    <div class="cn">¿Qué mostró el alumno?</div>
+    ${inds.map((t,i)=>`<div class="comp"><span class="small">${t}</span><div class="tri">${[[0,'No'],[1,'En parte'],[2,'Sí']].map(([x,l])=>`<button type="button" aria-pressed="${v[i]===x}" data-a="ci" data-i="${i}" data-v="${x}" data-k="ci-${i}-${x}">${l}</button>`).join('')}</div></div>`).join('')}
+    ${sug?`<p class="small">Sugerencia para el componente VI (comprensión): <b>${sug}</b> <button class="btn" data-a="lecsug" data-v="${sug}" data-k="lecsug">Usar ${sug}</button></p>`:`<p class="muted small">Marque los indicadores para ver una sugerencia de puntaje. El puntaje final lo decide usted con la rúbrica.</p>`}</div>`;
+}
+// Pantalla completa: modo alumno (texto grande) y modo aplicador (marcar errores y tomar el tiempo)
+const lCuenta=()=>lSet?lSet.size:0;
+function lecEl(){
+  let el=document.getElementById('lec'); if(el) return el;
+  el=document.createElement('div'); el.id='lec'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','Lectura del alumno');
+  el.innerHTML='<div class="lbar" id="lbar"></div><div class="lbody" id="lbody"></div>';
+  document.body.appendChild(el);
+  el.addEventListener('click',ev=>{
+    const w=ev.target.closest&&ev.target.closest('.lw');
+    if(w&&lMode==='aplicar'){ const i=+w.dataset.i; if(lSet.has(i)) lSet.delete(i); else lSet.add(i); w.classList.toggle('err',lSet.has(i)); const c=document.getElementById('lcnt'); if(c) c.textContent=lCuenta(); return; }
+    const bt=ev.target.closest&&ev.target.closest('button'); if(!bt) return;
+    if(bt.id==='lminus'){ lSize=Math.max(1,lSize-0.3); lTam(); }
+    else if(bt.id==='lplus'){ lSize=Math.min(6,lSize+0.3); lTam(); }
+    else if(bt.id==='lclose') cerrarLec();
+    else if(bt.id==='lsave') guardarLec();
+    else if(bt.id==='lrec') lecRec();
+  });
+  return el;
+}
+function lTam(){ const b=document.getElementById('lbody'); if(b) b.style.setProperty('--lf',String(lSize)); }
+function abrirLec(mode,a){
+  const L=lectG(), ims=limgDe(); if(!contarPal(L.x)&&!(mode==='alumno'&&ims.length)) return;
+  lMode=mode; lA=a||null; lPrev=document.activeElement;
+  const el=lecEl(), bar=document.getElementById('lbar'), body=document.getElementById('lbody'), tk=tokens(L.x);
+  lWords=tk.reduce((n,p)=>n+p.length,0);
+  lSet=new Set(mode==='aplicar'&&a&&a.ewn===lWords&&Array.isArray(a.ew)?a.ew:[]);
+  bar.innerHTML=mode==='aplicar'
+    ?`<span class="ltit">${esc(a.n)} · ${esc(L.t||'Lectura')}</span><span class="lctl"><span id="lclock" class="lclock">0:00.0</span><button type="button" id="lrec">Iniciar lectura</button><span>Errores: <b id="lcnt">${lCuenta()}</b> de ${lWords}</span><button type="button" id="lsave" class="pri">Guardar errores</button><button type="button" id="lclose">Salir sin guardar</button></span>`
+    :`<span class="ltit">${esc(L.t||'Lectura')}</span><span class="lctl"><button type="button" id="lminus" aria-label="Letra más pequeña">A−</button><button type="button" id="lplus" aria-label="Letra más grande">A+</button><button type="button" id="lclose">Cerrar</button></span>`;
+  body.className='lbody '+mode;
+  body.innerHTML=(mode==='alumno'&&L.t?`<h2>${esc(L.t)}</h2>`:'')+tk.map(p=>`<p>${p.map(w=>mode==='aplicar'?`<span class="lw${lSet.has(w.i)?' err':''}" data-i="${w.i}">${esc(w.w)}</span>`:esc(w.w)).join(' ')}</p>`).join('')+(mode==='alumno'&&L.f?`<p class="lfuente">${esc(L.f)}</p>`:'');
+  if(mode==='alumno'&&ims.length) body.innerHTML=ims.map((x,i)=>`<img class="limg" src="${x.u}" alt="Página ${i+1} de la lectura">`).join('');
+  lTam(); el.hidden=false; document.body.style.overflow='hidden'; body.scrollTop=0;
+  clearInterval(lTick); if(mode==='aplicar'){ lTick=setInterval(lecTick,100); lecTick(); }
+  document.getElementById('lclose').focus();
+}
+function lecTick(){
+  const c=document.getElementById('lclock'), b=document.getElementById('lrec'); if(!c||!b||!lA) return;
+  const run=tm&&tm.id===lA.id, otro=tm&&tm.id!==lA.id;
+  c.textContent=fmt(run?(Date.now()-tm.t0)/1000:(+lA.s||0));
+  b.textContent=run?(tm.mr?'Detener y guardar':'Detener'):(+lA.s?'Volver a tomar':'Iniciar lectura');
+  b.disabled=!!otro||iniciando;
+}
+function lecRec(){ if(!lA) return; if(tm&&tm.id===lA.id) detenerLectura(); else if(!tm) iniciarLectura(lA); }
+function guardarLec(){ if(!lA) return; lA.ew=Array.from(lSet).sort((x,y)=>x-y); lA.ewn=lWords; lA.e=lA.ew.length; cerrarLec(); touch(); }
+function cerrarLec(){ clearInterval(lTick); const el=document.getElementById('lec'); if(el) el.hidden=true; document.body.style.overflow=''; lA=null; if(lPrev&&lPrev.focus&&document.contains(lPrev)) lPrev.focus(); }
+document.addEventListener('keydown',ev=>{ const el=document.getElementById('lec'); if(el&&!el.hidden&&ev.key==='Escape') cerrarLec(); });
+// ---------- Lectura como imagen (foto o captura de la página del manual) ----------
+const limgs=new Map(), limgLoad=new Set();
+const limgDe=()=>limgs.get(lk(S.g.grado,S.g.apl))||[];
+async function loadLimgs(){ const g=lk(S.g.grado,S.g.apl); if(!idb||limgLoad.has(g)) return; limgLoad.add(g); const arr=await idbImg('readonly',s=>s.get('lec|'+g)); if(Array.isArray(arr)&&arr.length){ limgs.set(g,arr.map(b=>({b,u:URL.createObjectURL(b)}))); if(tab==='l') render(); } }
+function guardarLimgs(){ const g=lk(S.g.grado,S.g.apl), arr=limgDe().map(x=>x.b); if(arr.length) idbImg('readwrite',s=>s.put(arr,'lec|'+g)); else idbImg('readwrite',s=>s.delete('lec|'+g)); }
+function agregarLimgs(files){ const im=Array.from(files||[]).filter(f=>f&&/^image\//.test(f.type)); if(!im.length) return 0; const g=lk(S.g.grado,S.g.apl), cur=limgDe().slice(); im.forEach(b=>cur.push({b,u:URL.createObjectURL(b)})); limgs.set(g,cur); limgLoad.add(g); guardarLimgs(); render(); return im.length; }
+document.addEventListener('paste',ev=>{ if(tab!=='l'||!S.g.ini) return; const fs=ev.clipboardData&&ev.clipboardData.files; if(fs&&Array.from(fs).some(f=>/^image\//.test(f.type))){ ev.preventDefault(); agregarLimgs(fs); } });
+function limgPanel(){
+  loadLimgs(); const arr=limgDe();
+  return `<div class="skill"><b>Lectura como imagen</b>
+    <p class="small">Si prefiere, use una foto o captura de la página del manual. Adjunte la imagen o péguela aquí con Ctrl+V. Puede agregar varias si la lectura ocupa más de una página. Al mostrar la lectura al alumno se usa la imagen.</p>
+    <div class="rowflex"><button class="btn" data-a="limgadd" data-k="limgadd">Agregar imagen</button><input id="limg" type="file" accept="image/*" multiple hidden data-limg="1" aria-label="Imagen de la lectura">${arr.length&&!contarPal(lectG().x)?`<button class="btn pri" data-a="lecver" data-k="lecver3">Mostrar al alumno</button>`:''}</div>
+    ${arr.length?`<div class="thumbs">${arr.map((x,i)=>`<div class="thumb"><img src="${x.u}" alt="Página ${i+1} de la lectura"><button class="btn danger" data-a="limgdel" data-i="${i}" data-k="limgdel-${i}">Quitar</button></div>`).join('')}</div>
+    <p class="muted small">Con imagen no se pueden marcar errores palabra por palabra: escriba el total de palabras y los errores en Precisión, en la ficha del alumno. Las imágenes se guardan solo en este dispositivo.</p>`:''}</div>`;
+}
+// ---------- Tarjetas de apoyo visual (cálculo mental) ----------
+// Se generan con el texto de cada pregunta. Si el docente adjunta una imagen (por ejemplo, la tarjeta oficial de la SEP), se muestra esa.
+let tAuto=true, tIdx=0, tT0=0, tTick=null, tPrev=null, timgIdx=0;
+const timgs=new Map(), timgLoad=new Set();
+const tKey=i=>S.g.grado+'|'+i;
+function idbImg(mode,fn){ return new Promise(res=>{ if(!idb||!idb.objectStoreNames.contains('img')) return res(null); try{ const r=fn(idb.transaction('img',mode).objectStore('img')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); }catch(e){ res(null); } }); }
+async function loadImgs(){
+  const g=S.g.grado; if(!idb||timgLoad.has(g)) return; timgLoad.add(g); let hubo=false;
+  for(let i=0;i<10;i++){ const b=await idbImg('readonly',s=>s.get(g+'|'+i)); if(b){ timgs.set(g+'|'+i,URL.createObjectURL(b)); hubo=true; } }
+  if(hubo&&tab==='c') render();
+}
+function tarjetaTxt(p){
+  p=String(p||'').replace(/\s*\((?:con|mostrar) tarjeta\)\s*/gi,' ').replace(/\s+/g,' ').trim();
+  if(!p) return '';
+  const cm=p.match(/^¿?\s*cu[aá]nto es\s+(.+?)\s*\??$/i); if(cm&&esExpr(cm[1])) p=cm[1];
+  if(esExpr(p)) return p.replace(/(\d)\s*x\s*(\d)/gi,'$1 × $2')+' = ?';
+  const m=p.match(/\d+(?:\s*,\s*(?:\d+|_+))+/);
+  return m?m[0]:p;
+}
+const tieneT=i=>!!(tarjetaTxt(pq(i)[0])||timgs.has(tKey(i)));
+const tSize=t=>{ const n=t.length; return n<=10?'min(24vw,34vh)':n<=20?'min(14vw,22vh)':n<=40?'min(8vw,12vh)':'min(5.5vw,8vh)'; };
+function tarjetaEl(){
+  let el=document.getElementById('tarj'); if(el) return el;
+  el=document.createElement('div'); el.id='tarj'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','Tarjeta de apoyo visual');
+  el.innerHTML='<div class="tbar"><span id="tnum"></span><span class="tbtns"><button type="button" id="tprev" aria-label="Pregunta anterior">&larr;</button><button type="button" id="tnext" aria-label="Pregunta siguiente">&rarr;</button><button type="button" id="tclose">Cerrar</button></span></div><div class="tbody" id="tbody"></div><div class="tprog" aria-hidden="true"><i id="tbar"></i></div>';
+  document.body.appendChild(el);
+  el.addEventListener('click',ev=>{ const id=ev.target.id; if(id==='tprev') irTarjeta(-1); else if(id==='tnext') irTarjeta(1); else if(id==='tclose'||ev.target.closest('#tbody')||ev.target===el) cerrarTarjeta(); });
+  return el;
+}
+function mostrarT(i){
+  tIdx=i; tarjetaEl();
+  const body=document.getElementById('tbody'), u=timgs.get(tKey(i)), txt=tarjetaTxt(pq(i)[0]);
+  document.getElementById('tnum').textContent='Pregunta '+(i+1)+' de 10';
+  body.textContent='';
+  if(u){ const im=document.createElement('img'); im.src=u; im.alt='Tarjeta de la pregunta '+(i+1); body.appendChild(im); }
+  else { const d=document.createElement('div'); d.className='ttxt'; d.textContent=txt||'Esta pregunta no tiene texto. Escríbalo en “Preguntas del grado”.'; d.style.fontSize=txt?tSize(txt):'min(5vw,6vh)'; body.appendChild(d); }
+  const bar=document.getElementById('tbar'); bar.style.width='0%'; bar.parentNode.hidden=!tAuto; tT0=Date.now();
+  clearInterval(tTick);
+  if(tAuto) tTick=setInterval(()=>{ const p=(Date.now()-tT0)/5000; bar.style.width=Math.min(100,p*100)+'%'; if(p>=1) cerrarTarjeta(); },50);
+}
+function abrirTarjeta(i){ tPrev=document.activeElement; const el=tarjetaEl(); el.hidden=false; document.body.style.overflow='hidden'; mostrarT(i); document.getElementById('tclose').focus(); }
+function cerrarTarjeta(){ clearInterval(tTick); const el=document.getElementById('tarj'); if(el) el.hidden=true; document.body.style.overflow=''; if(tPrev&&tPrev.focus&&document.contains(tPrev)) tPrev.focus(); }
+function irTarjeta(d){ let i=tIdx+d; while(i>=0&&i<10&&!tieneT(i)) i+=d; if(i>=0&&i<10) mostrarT(i); }
+document.addEventListener('keydown',ev=>{ const el=document.getElementById('tarj'); if(!el||el.hidden) return; if(ev.key==='Escape') cerrarTarjeta(); else if(ev.key==='ArrowRight') irTarjeta(1); else if(ev.key==='ArrowLeft') irTarjeta(-1); });
+function timgBtns(i){
+  const t=timgs.has(tKey(i));
+  return `<button class="btn" type="button" data-a="timg" data-i="${i}" data-k="timg-${i}">${t?'Cambiar imagen':'Imagen'}</button>${t?`<button class="btn danger" type="button" data-a="timgdel" data-i="${i}" data-k="timgdel-${i}">Quitar</button>`:''}`;
+}
+function tarjetasPanel(){
+  loadImgs();
+  const hay=Array.from({length:10},(_,i)=>tieneT(i)).filter(Boolean).length;
+  return `<div class="panel"><h2>Tarjetas de apoyo visual</h2>
+    <p class="small">Muestre la tarjeta cuando el alumno responda mal o tarde más de 20 segundos. Aparece en pantalla completa, con letra grande, y se oculta a los 5 segundos, como indica el manual. Cada pregunta de la lista tiene su botón “Tarjeta”.</p>
+    <div class="rowflex"><button class="btn pri" data-a="tarjall" data-k="tarjall">Presentar tarjetas</button>${dl?`<button class="btn" data-a="tarjpdf" data-k="tarjpdf">Descargar tarjetas en PDF</button>`:''}<label class="small"><input type="checkbox" id="tauto" data-tauto="1"${tAuto?' checked':''}> Ocultar a los 5 segundos</label></div>
+    ${hay<10?`<p class="warn small">${10-hay} ${10-hay===1?'pregunta no tiene':'preguntas no tienen'} texto, así que no ${10-hay===1?'tiene':'tienen'} tarjeta. Escríbalas en “Preguntas del grado”, más abajo.</p>`:''}
+    <p class="muted small">Las tarjetas se generan con el texto de cada pregunta. Si prefiere las tarjetas oficiales de la SEP, adjunte una imagen por pregunta en “Preguntas del grado” y se mostrará en lugar de la generada. Las imágenes se guardan solo en este dispositivo.</p>
+    <p class="small" id="tmsg" role="status"></p><input id="timg" type="file" accept="image/*" hidden data-timg="1" aria-label="Imagen de la tarjeta"></div>`;
+}
+function pdfTarjetas(){
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'letter',orientation:'landscape'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=15;
+  const clean=s=>String(s==null?'':s).replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,'...').replace(/[–—−]/g,'-').replace(/→/g,'>').replace(/[^\x20-\x7E\xA0-\xFF\n]/g,'');
+  let n=0;
+  for(let i=0;i<10;i++){
+    const t=clean(tarjetaTxt(pq(i)[0])); if(!t) continue;
+    if(n++) doc.addPage();
+    doc.setFont('helvetica','bold'); doc.setTextColor(0,0,0);
+    let size=240, lines, lh, un=240;
+    for(;un>=60;un-=4){ doc.setFontSize(un); if(doc.getTextWidth(t)<=W-2*M) break; }
+    const unaLinea=un>=60; if(unaLinea){ size=un; lines=[t]; lh=size*0.3528*1.15; }
+    if(!unaLinea) for(size=140;size>=30;size-=6){ doc.setFontSize(size); lines=doc.splitTextToSize(t,W-2*M); lh=size*0.3528*1.15; if(lines.length*lh<=H-2*M-12&&lines.every(l=>doc.getTextWidth(l)<=W-2*M)) break; }
+    let y=(H-lines.length*lh)/2+lh*0.8;
+    lines.forEach(l=>{ doc.text(l,W/2,y,{align:'center'}); y+=lh; });
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120,120,120);
+    doc.text(clean('Pregunta '+(i+1)+' de 10 · '+S.g.grado),M,H-8);
+  }
+  return n?doc:null;
 }
 // ---------- Concentrado de escuela ----------
 let ESC=[];
@@ -994,6 +1382,26 @@ document.addEventListener('click',ev=>{
     if(!window.jspdf){ say('No se pudo cargar el generador de PDF.'); return; }
     let pb; try{ pb=pdfEscuela(rs).output('blob'); }catch(e){ say('No se pudo generar el PDF.'); return; }
     dl.save({filename:('Concentrado SisAT - '+nombreEsc(rs)+' - '+escApl+' aplicacion.pdf').replace(/[\\/:*?"<>|]/g,''),data:pb}).then(()=>say('PDF guardado. Ya puede imprimirlo o enviarlo.'),err=>{ if(!err||err.code!=='declined') say('No se pudo guardar el PDF en esta vista.'); }); }
+  else if(act==='limgadd'){ const fl2=document.getElementById('limg'); if(fl2) fl2.click(); }
+  else if(act==='limgdel'){ const cur=limgDe().slice(), x=cur.splice(+b.dataset.i,1)[0]; if(x) URL.revokeObjectURL(x.u); limgs.set(lk(S.g.grado,S.g.apl),cur); guardarLimgs(); render(); }
+  else if(act==='lecpdf'){ const fp=document.getElementById('lecpdf'); if(fp) fp.click(); }
+  else if(act==='lecver'){ abrirLec('alumno'); }
+  else if(act==='lecapl'&&a){ abrirLec('aplicar',a); }
+  else if(act==='lecej'){ const Le=lectG(); Le.t=LEC_EJ.t; Le.x=LEC_EJ.x; Le.ej=true; S.g.palabras=contarPal(Le.x); touch(); }
+  else if(act==='lecdel'){ confirmLec=true; render(); }
+  else if(act==='lecno'){ confirmLec=false; render(); }
+  else if(act==='lecdel2'){ const Ld=lectG(); Ld.t=''; Ld.x=''; Ld.ej=false; confirmLec=false; touch(); }
+  else if(act==='lecsug'&&a){ a.l[5]=+b.dataset.v; touch(); }
+  else if(act==='ci'&&a){ a.ci=a.ci||[null,null,null]; const ci=+b.dataset.i, cv=+b.dataset.v; a.ci[ci]=a.ci[ci]===cv?null:cv; touch(); }
+  else if(act==='tarj'){ abrirTarjeta(+b.dataset.i); }
+  else if(act==='tarjall'){ const i0=[0,1,2,3,4,5,6,7,8,9].find(tieneT); if(i0===undefined){ const m0=document.getElementById('tmsg'); if(m0) m0.textContent='No hay preguntas con texto para generar tarjetas.'; } else abrirTarjeta(i0); }
+  else if(act==='tarjpdf'&&dl){ const say=t=>{ const m1=document.getElementById('tmsg'); if(m1) m1.textContent=t; };
+    if(!window.jspdf){ say('No se pudo cargar el generador de PDF.'); return; }
+    let dt; try{ dt=pdfTarjetas(); }catch(e){ say('No se pudo generar el PDF.'); return; }
+    if(!dt){ say('No hay preguntas con texto para generar tarjetas.'); return; }
+    dl.save({filename:('Tarjetas de calculo mental - '+S.g.grado+'.pdf').replace(/[\\/:*?"<>|]/g,''),data:dt.output('blob')}).then(()=>say('PDF guardado. Imprímalo en hoja tamaño carta, en horizontal.'),err=>{ if(!err||err.code!=='declined') say('No se pudo guardar el PDF.'); }); }
+  else if(act==='timg'){ timgIdx=+b.dataset.i; const fi2=document.getElementById('timg'); if(fi2) fi2.click(); }
+  else if(act==='timgdel'){ const kk=tKey(+b.dataset.i), uu=timgs.get(kk); if(uu) URL.revokeObjectURL(uu); timgs.delete(kk); idbImg('readwrite',s=>s.delete(kk)); render(); }
   else if(act==='tstart'&&a){ iniciarLectura(a); }
   else if(act==='tstop'&&tm){ detenerLectura(); }
   else if(act==='treset'&&a){ a.s=0; touch(); }
@@ -1030,8 +1438,15 @@ document.addEventListener('submit',ev=>{
 });
 document.addEventListener('change',ev=>{
   const t=ev.target, a=S.a.find(x=>x.id===sel);
-  if(t.dataset.g){ S.g[t.dataset.g]=t.value; if(t.dataset.g==='escuela') renderFields(); touch(); }
+  if(t.dataset.g){ S.g[t.dataset.g]=t.value; if(t.dataset.g==='escuela') renderFields(); if(t.dataset.g==='grado'||t.dataset.g==='apl'){ const Lq=S.g.lect&&S.g.lect[lk(S.g.grado,S.g.apl)]; if(Lq&&(Lq.x||Lq.pal)) S.g.palabras=Lq.pal||contarPal(Lq.x); } touch(); }
   else if(t.dataset.n&&a){ a.n=t.value.trim()||a.n; touch(); }
+  else if(t.dataset.limg){ agregarLimgs(t.files); }
+  else if(t.dataset.lecpdf){ const fpdf=t.files&&t.files[0]; t.value=''; if(fpdf) importarManual(fpdf); }
+  else if(t.dataset.lt){ lectG().t=t.value.trim(); touch(); }
+  else if(t.dataset.lx){ const Lx=lectG(); Lx.x=t.value; Lx.ej=false; Lx.imp=false; Lx.pal=0; if(Lx.x.trim()) S.g.palabras=contarPal(Lx.x); touch(); }
+  else if(t.dataset.lq){ lectG().q=t.value; touch(); }
+  else if(t.dataset.timg){ const fm=t.files&&t.files[0]; t.value=''; if(fm){ const kk=tKey(timgIdx), old=timgs.get(kk); if(old) URL.revokeObjectURL(old); timgs.set(kk,URL.createObjectURL(fm)); idbImg('readwrite',s=>s.put(fm,kk)); render(); } }
+  else if(t.dataset.tauto){ tAuto=t.checked; }
   else if(t.dataset.escfile){ const fl=Array.from(t.files||[]); t.value=''; leerArchivos(fl); }
   else if(t.dataset.eapl){ escApl=t.value; render(); }
   else if(t.dataset.grab){ grabar=t.checked; }
