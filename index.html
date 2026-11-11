@@ -204,12 +204,6 @@ textarea{width:100%;min-height:120px;background:var(--surface);border:1px solid 
 #lec .lw{cursor:pointer;border-radius:6px;padding:2px 3px} #lec .lw:hover{background:#e5eafc}
 #lec .lw.err{background:#fbdfdc;color:#a8231c;font-weight:700;text-decoration:underline}
 @media (max-width:520px){#lec .ltit{flex:1 1 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #lec .lbar{gap:4px 8px;padding:6px 12px;padding-top:max(6px,env(safe-area-inset-top,0px))} #lec button{min-height:40px;padding:0 10px;font-size:.9rem} #lec .lclock{font-size:1.15rem;min-width:4.6rem}}
-#lec .lbody p.lfuente{font-size:.4em;color:#566080;line-height:1.4;margin-top:2em}
-.thumbs{display:flex;flex-wrap:wrap;gap:10px}
-.thumb{display:flex;flex-direction:column;gap:6px;align-items:center}
-.thumb img{width:110px;height:140px;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:8px;background:#fff}
-#lec .lbody{overflow-x:auto}
-#lec .lbody img.limg{display:block;width:calc(var(--lf,2.4) / 2.4 * 100%);max-width:none;margin:0 auto 12px}
 footer{font-size:.82rem;color:var(--muted);max-width:75ch}
 </style>
 
@@ -386,7 +380,7 @@ let tm=null, tick=null;
 const fmt=s=>{ s=Math.max(0,s); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor(s*10%10); };
 const audios=new Map();
 let idb=null;
-try{ const rq=indexedDB.open('sisat-audio',2); rq.onupgradeneeded=()=>{ const d=rq.result; if(!d.objectStoreNames.contains('a')) d.createObjectStore('a'); if(!d.objectStoreNames.contains('img')) d.createObjectStore('img'); }; rq.onsuccess=()=>{ idb=rq.result; loadAudio(sel); if(tab==='c'||tab==='l') render(); }; }catch(e){}
+try{ const rq=indexedDB.open('sisat-audio',2); rq.onupgradeneeded=()=>{ const d=rq.result; if(!d.objectStoreNames.contains('a')) d.createObjectStore('a'); if(!d.objectStoreNames.contains('img')) d.createObjectStore('img'); }; rq.onsuccess=()=>{ idb=rq.result; loadAudio(sel); if(tab==='c') render(); }; }catch(e){}
 function idbOp(mode,fn){ return new Promise(res=>{ if(!idb) return res(null); try{ const r=fn(idb.transaction('a',mode).objectStore('a')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); }catch(e){ res(null); } }); }
 function setAudio(id,blob){
   const old=audios.get(id); if(old){ old.el.pause(); URL.revokeObjectURL(old.url); audios.delete(id); }
@@ -655,167 +649,6 @@ function pdfDoc(alumnos){
   });
   return doc;
 }
-// ---------- Importar lecturas del manual (PDF) ----------
-// Las lecturas no vienen incluidas en la app: se leen del PDF del manual de la SEP que el docente elige.
-// El archivo se procesa en este dispositivo y no se sube a ningún lado.
-let pdfjsListo=null;
-// Cada aplicación (momento) tiene sus propias lecturas; la primera usa la clave del grado sola.
-const lk=(g,ap)=>ap&&ap!=='Primera'?g+'|'+ap:g;
-async function paginaImagen(pdf,i){
-  const pg=await pdf.getPage(i), vp=pg.getViewport({scale:2}), cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
-  const c=cv.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,cv.width,cv.height);
-  await pg.render({canvasContext:c,viewport:vp,intent:'print'}).promise;
-  return new Promise(r=>cv.toBlob(r,'image/jpeg',0.88));
-}
-function cargarPdfJs(){
-  if(window.pdfjsLib){ pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js'; return Promise.resolve(); }
-  if(pdfjsListo) return pdfjsListo;
-  pdfjsListo=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='vendor/pdf.min.js'; s.onload=()=>{ pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js'; res(); }; s.onerror=()=>{ pdfjsListo=null; rej(new Error('No se pudo cargar el lector de PDF.')); }; document.head.appendChild(s); });
-  return pdfjsListo;
-}
-const RX_GRADO=/(PRIMER|SEGUNDO|TERCER|CUARTO|QUINTO|SEXTO)\s+GRADO/;
-const GR_NUM={PRIMER:1,SEGUNDO:2,TERCER:3,CUARTO:4,QUINTO:5,SEXTO:6};
-const SUP=/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g;
-function unirLinea(a,b){ return /[A-Za-zÁÉÍÓÚÜáéíóúüñÑ]-$/.test(a)&&/^[a-záéíóúüñ]/.test(b)?a.slice(0,-1)+b:(a?a+' ':'')+b; }
-function modaH(lineas){ const c={}; lineas.forEach(l=>{ const k=Math.round(l.h); c[k]=(c[k]||0)+l.t.length; }); const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; return k===undefined?0:+k; }
-function lineasPdf(tc,H){
-  const L=[];
-  tc.items.forEach(x=>{ if(typeof x.str!=='string'||!x.str) return; const y=x.transform[5], h=Math.abs(x.transform[3])||x.height||0; let l=L.find(q=>Math.abs(q.y-y)<2.5); if(!l){ l={y,its:[]}; L.push(l); } l.its.push({s:x.str,x:x.transform[4],w:x.width||0,h}); });
-  L.sort((a,b)=>b.y-a.y);
-  return L.map(l=>{
-    l.its.sort((a,b)=>a.x-b.x); let t='', fin=null; const hh={};
-    l.its.forEach(i=>{ if(fin!==null&&i.x-fin>i.h*0.15&&!/\s$/.test(t)&&!/^\s/.test(i.s)) t+=' '; t+=i.s; fin=i.x+i.w; const k=Math.round(i.h*2)/2; hh[k]=(hh[k]||0)+i.s.length; });
-    const h=+Object.keys(hh).sort((a,b)=>hh[b]-hh[a])[0];
-    t=t.replace(/[ﬁ]/g,'fi').replace(/[ﬂ]/g,'fl').replace(/ﬀ/g,'ff').replace(/ﬃ/g,'ffi').replace(/ﬄ/g,'ffl');
-    return {y:l.y,h,t:t.replace(/\s+/g,' ').trim(),pie:l.y<=H*0.085};
-  }).filter(l=>l.t);
-}
-// Une las líneas del cuerpo en párrafos: un salto mayor que el interlineado normal marca párrafo nuevo.
-function armarParrafos(cuerpo){
-  const gaps=[]; for(let i=1;i<cuerpo.length;i++){ if(cuerpo[i].p===cuerpo[i-1].p){ const d=cuerpo[i-1].y-cuerpo[i].y; if(d>0) gaps.push(d); } }
-  const umbral=(gaps.length?Math.min(...gaps):15)*1.35, paras=[]; let cur='';
-  cuerpo.forEach((l,i)=>{
-    if(!i){ cur=l.t; return; }
-    const prev=cuerpo[i-1], corte=l.p===prev.p?(prev.y-l.y)>umbral:/[.?!:;»”"…)]$/.test(prev.t);
-    if(corte){ paras.push(cur); cur=l.t; } else cur=unirLinea(cur,l.t);
-  });
-  if(cur) paras.push(cur);
-  return paras.map(p=>p.replace(SUP,'').trim()).filter(Boolean);
-}
-function recortarEncabezado(L,primera){
-  if(!primera) return L;
-  const k=L.findIndex(l=>/haga el registro\.?$/i.test(l.t));
-  return k>=0?L.slice(k+1):L.filter(l=>!/^(ANEXO 1|MATERIALES PARA LA TOMA DE LECTURA)$/i.test(l.t)&&!/^INSTRUCCIONES:/i.test(l.t)&&!RX_GRADO.test(l.t));
-}
-// Formato de primaria: lectura y, en la página siguiente, "Guía de preguntas" con "Total de palabras".
-function extraerLectura(pags,r,g){
-  const filas=[];
-  for(let p=r;p<g;p++) recortarEncabezado(pags[p].filter(l=>!l.pie),p===r).forEach(l=>filas.push({...l,p}));
-  if(!filas.length) return null;
-  const base=modaH(filas), tit=[], cred=[], cuerpo=[];
-  filas.forEach(l=>{ if(l.h>=base+1.5&&!cuerpo.length) tit.push(l.t); else if(l.h<=base-1.2) cred.push(l.t); else cuerpo.push(l); });
-  return {titulo:tit.join(' ').trim(),texto:armarParrafos(cuerpo).join('\n'),fuente:cred.join(' ').trim()};
-}
-function extraerPreguntas(L,desde){
-  const pregs=[]; let cur=null, op=null, activo=!desde;
-  for(const l of L){
-    if(l.pie) continue; const t=l.t;
-    if(/^Total de palabras/i.test(t)) break;
-    let m=t.match(/^(\d{1,2})(?:\.\s*|\s+)(\S.*)$/);
-    if(m){ cur={n:+m[1],t:m[2],o:[]}; op=null; pregs.push(cur); continue; }
-    if(!cur) continue;
-    m=t.match(/^([a-dA-D])\)\s*(.*)$/);
-    if(m){ op={l:m[1].toLowerCase(),t:m[2]}; cur.o.push(op); continue; }
-    if(op) op.t=unirLinea(op.t,t); else cur.t=unirLinea(cur.t,t);
-  }
-  return pregs.map(q=>(q.t+(q.o.length?' '+q.o.map(o=>`(${o.l}) ${o.t.trim()}`).join('; '):'')).replace(SUP,'').replace(/\s+/g,' ').trim()).filter(Boolean);
-}
-// Formato de secundaria: la lectura termina con "N PALABRAS" y las preguntas siguen en la misma página.
-function extraerLecturaSec(pags,r,e){
-  const filas=[];
-  for(let p=r;p<=e;p++) recortarEncabezado(pags[p].filter(l=>!l.pie),p===r).forEach(l=>filas.push({...l,p}));
-  const iP=filas.findIndex(l=>l.p===e&&/^\d{2,4}\s+PALABRAS$/.test(l.t));
-  if(iP<0) return null;
-  const antes=filas.slice(0,iP), despues=filas.slice(iP+1);
-  const base=modaH(antes.filter(l=>l.h>=8));
-  const util=antes.filter(l=>l.h>base-3);
-  if(util.length<2) return null;
-  const titulo=util[0].t, resto=util.slice(1);
-  const cred=resto.filter(l=>l.h<=base-1.2).map(l=>l.t.replace(/^\d\s+(?=[A-ZÁÉÍÓÚ])/,'')), cuerpo=resto.filter(l=>l.h>base-1.2);
-  const baseQ=modaH(despues.filter(l=>l.h>=8)), preg=despues.filter(l=>l.h>=baseQ-0.6);
-  const pal=+filas[iP].t.match(/^(\d+)/)[1];
-  return {titulo,texto:armarParrafos(cuerpo).join('\n'),fuente:cred.join(' ').trim(),pal,preguntas:extraerPreguntas(preg,true)};
-}
-async function leerManual(file,prog){
-  await cargarPdfJs();
-  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
-  const pags=[];
-  for(let i=1;i<=pdf.numPages;i++){ const pg=await pdf.getPage(i); pags.push(lineasPdf(await pg.getTextContent(),pg.view[3]-pg.view[1])); if(prog&&i%6===0) prog(i,pdf.numPages); }
-  const txt=pags.map(L=>L.map(l=>l.t).join(' '));
-  const lecturas=[]; let sec=0, pri=0;
-  const nivelDe=r=>{ const t=pags[r].map(l=>l.t).join(' '); if(/SECUNDARIA/i.test(t)&&!/PRIMARIA/i.test(t)) sec++; else if(/PRIMARIA/i.test(t)) pri++; };
-  const inicio=(fin)=>{ let r=fin; while(r>0&&fin-r<4&&!(RX_GRADO.test(txt[r])&&/MATERIALES PARA LA TOMA DE LECTURA/i.test(txt[r]))) r--; return RX_GRADO.test(txt[r])?r:-1; };
-  txt.forEach((t,gi)=>{
-    const m=t.match(/Total de palabras de la lectura:\s*(\d+)/i); if(!m||!/Gu[ií]a de preguntas/i.test(t)) return;
-    const r=inicio(gi-1); if(r<0) return;
-    const lec=extraerLectura(pags,r,gi); if(!lec||!lec.texto) return;
-    nivelDe(r); lecturas.push({n:GR_NUM[txt[r].match(RX_GRADO)[1]],pal:+m[1],preguntas:extraerPreguntas(pags[gi],false),...lec});
-  });
-  if(!lecturas.length) txt.forEach((t,e)=>{
-    if(!/\b\d{2,4}\s+PALABRAS\b/.test(t)) return;
-    const r=inicio(e); if(r<0) return;
-    const lec=extraerLecturaSec(pags,r,e); if(!lec||!lec.texto) return;
-    nivelDe(r); lecturas.push({n:GR_NUM[txt[r].match(RX_GRADO)[1]],...lec});
-  });
-  // Formato de los cuadernillos por momento: "Texto para el alumno", "Texto para el aplicador" y "Guía de preguntas" por grado.
-  // Cuando la lectura viene como imagen dentro del PDF, se guarda la página del alumno como imagen.
-  if(!lecturas.length){
-    const comp=txt.map(t=>t.replace(/\s+/g,'').toUpperCase()), GR=['PRIMER','SEGUNDO','TERCER','CUARTO','QUINTO','SEXTO'];
-    const limpiaF=s=>s.replace(/h\u0000ps:/g,'https:').replace(/[\u0000-\u001f]/g,'');
-    for(let n=1;n<=6;n++){
-      const g=GR[n-1]+'GRADO', iA=comp.findIndex(t=>t.includes('TEXTOPARAELALUMNO'+g)), iP=comp.findIndex(t=>t.includes('TEXTOPARAELAPLICADOR'+g)), iG=comp.findIndex(t=>/GU[IÍ]ADEP+REGUNTAS/.test(t)&&t.includes(g));
-      if(iA<0&&iP<0) continue;
-      const src=iP>=0?iP:iA, m=txt[src].match(/Total de palabras de la lectura:\s*(\d+)/i);
-      const L=pags[src].filter(l=>!l.pie).slice(1).filter(l=>!/^Total de palabras/i.test(l.t)).map(l=>({...l,p:src}));
-      const grandes=L.filter(l=>l.h>=12), hayTexto=grandes.reduce((s,l)=>s+l.t.length,0)>200;
-      let titulo='', texto='', img=null;
-      if(hayTexto){ const base=modaH(grandes); titulo=grandes.filter(l=>l.h>=base+1.5).map(l=>l.t).join(' '); texto=armarParrafos(grandes.filter(l=>l.h<base+1.5)).join('\n'); }
-      // Si el texto leído no cuadra con el total declarado (columnas, letras que el PDF no entrega), se usa la imagen de la página.
-      if(texto&&m&&Math.abs(contarPal(texto)-(+m[1]))>Math.max(3,Math.round(+m[1]*0.03))) texto='';
-      if(!texto) img=await paginaImagen(pdf,(iA>=0?iA:iP)+1);
-      nivelDe(src);
-      lecturas.push({n,pal:m?+m[1]:0,titulo,texto,fuente:limpiaF(L.filter(l=>l.h<12).map(l=>l.t).join(' ')),img,preguntas:iG>=0?extraerPreguntas(pags[iG],false):[]});
-    }
-  }
-  return {nivel:sec>pri?'secundaria':'primaria',lecturas};
-}
-function aplicarLecturas(res,apl){
-  const puestas=[], conservadas=[], avisos=[];
-  res.lecturas.forEach(r=>{
-    const g=`${r.n}.º ${res.nivel}`; if(!GRADOS.includes(g)) return;
-    S.g.lect=S.g.lect||{}; const key=lk(g,apl), cur=S.g.lect[key];
-    if(cur&&cur.x&&!cur.ej&&!cur.imp){ conservadas.push(g); return; }
-    const mia=contarPal(r.texto), ok=!r.texto||r.pal&&Math.abs(r.pal-mia)<=Math.max(3,Math.round(r.pal*0.03));
-    if(r.pal&&!ok) avisos.push(`En ${g} el total del manual (${r.pal}) no coincide con el texto (${mia}); se usó el conteo del texto.`);
-    S.g.lect[key]={t:r.titulo,x:r.texto,q:r.preguntas.join('\n'),f:r.fuente,pal:ok?r.pal:0,imp:true};
-    if(r.img){ (limgs.get(key)||[]).forEach(x=>URL.revokeObjectURL(x.u)); limgs.set(key,[{b:r.img,u:URL.createObjectURL(r.img)}]); limgLoad.add(key); idbImg('readwrite',s=>s.put([r.img],'lec|'+key)); }
-    puestas.push(g+(r.img?' (imagen)':''));
-  });
-  const Lg=S.g.lect&&S.g.lect[lk(S.g.grado,S.g.apl)]; if(Lg&&(Lg.x||Lg.pal)) S.g.palabras=Lg.pal||contarPal(Lg.x);
-  save(); return {puestas,conservadas,avisos};
-}
-async function importarManual(file){
-  const say=t=>{ const m=document.getElementById('lecmsg'); if(m) m.textContent=t; };
-  say('Leyendo el manual… puede tardar unos segundos.');
-  let res;
-  try{ res=await leerManual(file,(i,n)=>say(`Leyendo el manual… página ${i} de ${n}.`)); }
-  catch(e){ say('No se pudo leer ese archivo. Elija el PDF del manual de exploración de habilidades básicas.'); return; }
-  if(!res.lecturas.length){ say('No se encontraron lecturas en ese PDF. Elija el manual de exploración de habilidades básicas (primaria o secundaria), que incluye el Anexo 1.'); return; }
-  const apl=/segund/i.test(file.name)?'Segunda':/tercer\s*momento|3er/i.test(file.name)?'Tercera':S.g.apl;
-  const r=aplicarLecturas(res,apl); render();
-  const m=document.getElementById('lecmsg');
-  if(m) m.textContent=`Se cargaron ${r.puestas.length} ${r.puestas.length===1?'lectura':'lecturas'} (${r.puestas.join(', ')||'ninguna'}) para la ${apl.toLowerCase()} aplicación.`+(apl!==S.g.apl?` Para verlas, cambie “Aplicación” a ${apl} en el encabezado.`:'')+(r.conservadas.length?` Se conservó el texto que ya había escrito en ${r.conservadas.join(', ')}.`:'')+(r.avisos.length?' '+r.avisos.join(' '):'');
-}
 // ---------- Lectura del grado: texto, errores y comprensión ----------
 // El texto de cada grado lo pega el docente (el manual de la SEP trae una lectura por grado en su Anexo 1).
 // Solo se incluye un texto de ejemplo, propio de esta app, para probar la herramienta.
@@ -831,26 +664,20 @@ const PREG_COMP=[
 const CIND=['Identifica las ideas o detalles relevantes','Reconoce personajes, escenarios o la resolución del tema','Su recuerdo sigue el orden del texto'];
 let lMode='', lA=null, lSize=2.4, lSet=new Set(), lWords=0, lTick=null, lPrev=null, confirmLec=false;
 const contarPal=x=>(String(x||'').trim().match(/\S+/g)||[]).length;
-const lectG=()=>{ S.g.lect=S.g.lect||{}; const k=lk(S.g.grado,S.g.apl); return S.g.lect[k]||(S.g.lect[k]={t:'',x:'',q:''}); };
+const lectG=()=>{ S.g.lect=S.g.lect||{}; const k=S.g.grado; return S.g.lect[k]||(S.g.lect[k]={t:'',x:'',q:''}); };
 const g12=()=>/^[12]\.º primaria/.test(S.g.grado);
 function preguntasDe(L){ const own=String(L.q||'').split('\n').map(s=>s.trim()).filter(Boolean); if(own.length) return own; return g12()?[0,1,4].map(i=>PREG_COMP[i]):PREG_COMP; }
 function tokens(x){ let i=0; return String(x||'').split(/\n+/).map(p=>(p.match(/\S+/g)||[]).map(w=>({w,i:i++}))).filter(p=>p.length); }
 function lecturaPanel(){
   const L=lectG(), n=contarPal(L.x), own=!!String(L.q||'').trim();
   return `<div class="panel"><h2 class="hic ev-l">${ICON.l}Lectura del grado</h2>
-    <p class="small">Texto que lee el alumno en ${esc(S.g.grado)} y preguntas de comprensión. Las lecturas del manual de la SEP (Anexo 1) no vienen incluidas en la app: cárguelas desde su copia del manual en PDF o pegue el texto.</p>
-    <div class="rowflex"><button class="btn pri" data-a="lecpdf" data-k="lecpdf">Cargar lecturas del manual (PDF)</button><input id="lecpdf" type="file" accept="application/pdf,.pdf" hidden data-lecpdf="1" aria-label="Manual SisAT en PDF"></div>
-    <p class="small" id="lecmsg" role="status"></p>
-    <p class="muted small">Elija el PDF del manual de exploración de habilidades básicas (primaria o secundaria) o el cuadernillo de lecturas de otro momento. Si el nombre del archivo dice “segundo momento”, se guardan en la segunda aplicación. Se lee en este dispositivo y no se sube a ningún lado. Carga las lecturas de todos los grados, con sus preguntas y el total de palabras.</p>
-    <p class="small"><b>${esc(S.g.grado)} · ${esc(S.g.apl)} aplicación.</b> Cada aplicación guarda sus propias lecturas; se cambia en “Aplicación”, en el encabezado.</p>
-    ${L.imp?`<p class="small">Lectura tomada del PDF cargado.${L.f?` Fuente: ${esc(L.f)}`:''}${L.pal?` Total de palabras según el manual: ${L.pal}.`:''}</p>`:''}
+    <p class="small">Texto que lee el alumno en ${esc(S.g.grado)} y preguntas de comprensión. El manual trae una lectura por grado en su Anexo 1: cópiela aquí para tenerla en pantalla.</p>
     ${L.ej?`<p class="warn small">Es un texto de ejemplo para probar la herramienta. No es una lectura oficial del SisAT: no lo use para evaluar.</p>`:''}
     <label class="lbl">Título<input class="inp" id="lec-t" data-lt="1" value="${esc(L.t||'')}"></label>
     <label class="lbl">Texto de la lectura<textarea id="lec-x" data-lx="1" style="min-height:140px;font-family:var(--body);font-size:.95rem" placeholder="Pegue aquí el texto de la lectura">${esc(L.x||'')}</textarea></label>
     <p class="small muted">${n?`${n} palabras. Se usan para calcular el porcentaje de errores y las palabras por minuto.`:'Todavía no hay texto.'}</p>
-    <div class="rowflex">${n||limgDe().length?`<button class="btn pri" data-a="lecver" data-k="lecver">Mostrar al alumno</button>`:''}<button class="btn" data-a="lecej" data-k="lecej">Cargar texto de ejemplo</button>
+    <div class="rowflex">${n?`<button class="btn pri" data-a="lecver" data-k="lecver">Mostrar al alumno</button>`:''}<button class="btn" data-a="lecej" data-k="lecej">Cargar texto de ejemplo</button>
       ${L.x?(confirmLec?`<button class="btn danger" data-a="lecdel2" data-k="lecdel2">Sí, borrar texto</button><button class="btn" data-a="lecno" data-k="lecno">Cancelar</button>`:`<button class="btn danger" data-a="lecdel" data-k="lecdel">Borrar texto</button>`):''}</div>
-    ${limgPanel()}
     <div class="skill"><b>Preguntas de comprensión</b>
       <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px">${preguntasDe(L).map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
       <p class="muted small">${own?'Son las preguntas que usted escribió.':'Son preguntas guía generales, redactadas para esta app a partir de la rúbrica; no son las preguntas oficiales de cada texto.'}${g12()?' En 1.º y 2.º solo se considera si identifica ideas o detalles.':''} Según el manual, si con la primera pregunta el alumno identifica ideas o detalles relevantes, reconoce personajes, escenario o resolución y sigue el orden del texto, no hace falta continuar con las demás.</p>
@@ -863,7 +690,7 @@ function lecAlumno(a){
   const marcados=a.ewn===n&&Array.isArray(a.ew);
   const errs=!n?'':marcados?`${a.e||0} errores marcados de ${n} palabras`:(a.e!==''&&a.e!=null?`${a.e} errores registrados`:'Sin errores marcados todavía');
   return `<div class="fluid" style="background:var(--sunk)"><div class="cn">Lectura del alumno y comprensión</div>
-    ${n?`<div class="rowflex"><button class="btn pri" data-a="lecapl" data-k="lecapl">Aplicar lectura y marcar errores</button><span class="small">${errs}</span></div>`:`${limgDe().length?`<div class="rowflex"><button class="btn pri" data-a="lecver" data-k="lecver2">Mostrar lectura al alumno</button></div><p class="small">La lectura está como imagen: no se pueden marcar errores palabra por palabra. Cuente los errores y anótelos en Precisión, más abajo, junto con el total de palabras.</p>`:`<p class="small">Escriba o cargue la lectura del grado en “Lectura del grado”, más arriba, para marcar errores palabra por palabra.</p>`}`}
+    ${n?`<div class="rowflex"><button class="btn pri" data-a="lecapl" data-k="lecapl">Aplicar lectura y marcar errores</button><span class="small">${errs}</span></div>`:`<p class="small">Escriba o cargue la lectura del grado en “Lectura del grado”, más arriba, para marcar errores palabra por palabra.</p>`}
     <div><b class="small">Preguntas de comprensión</b><ol class="small" style="margin:4px 0 0;padding-left:20px">${preguntasDe(L).map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>
     <div class="cn">¿Qué mostró el alumno?</div>
     ${inds.map((t,i)=>`<div class="comp"><span class="small">${t}</span><div class="tri">${[[0,'No'],[1,'En parte'],[2,'Sí']].map(([x,l])=>`<button type="button" aria-pressed="${v[i]===x}" data-a="ci" data-i="${i}" data-v="${x}" data-k="ci-${i}-${x}">${l}</button>`).join('')}</div></div>`).join('')}
@@ -890,7 +717,7 @@ function lecEl(){
 }
 function lTam(){ const b=document.getElementById('lbody'); if(b) b.style.setProperty('--lf',String(lSize)); }
 function abrirLec(mode,a){
-  const L=lectG(), ims=limgDe(); if(!contarPal(L.x)&&!(mode==='alumno'&&ims.length)) return;
+  const L=lectG(); if(!contarPal(L.x)) return;
   lMode=mode; lA=a||null; lPrev=document.activeElement;
   const el=lecEl(), bar=document.getElementById('lbar'), body=document.getElementById('lbody'), tk=tokens(L.x);
   lWords=tk.reduce((n,p)=>n+p.length,0);
@@ -899,8 +726,7 @@ function abrirLec(mode,a){
     ?`<span class="ltit">${esc(a.n)} · ${esc(L.t||'Lectura')}</span><span class="lctl"><span id="lclock" class="lclock">0:00.0</span><button type="button" id="lrec">Iniciar lectura</button><span>Errores: <b id="lcnt">${lCuenta()}</b> de ${lWords}</span><button type="button" id="lsave" class="pri">Guardar errores</button><button type="button" id="lclose">Salir sin guardar</button></span>`
     :`<span class="ltit">${esc(L.t||'Lectura')}</span><span class="lctl"><button type="button" id="lminus" aria-label="Letra más pequeña">A−</button><button type="button" id="lplus" aria-label="Letra más grande">A+</button><button type="button" id="lclose">Cerrar</button></span>`;
   body.className='lbody '+mode;
-  body.innerHTML=(mode==='alumno'&&L.t?`<h2>${esc(L.t)}</h2>`:'')+tk.map(p=>`<p>${p.map(w=>mode==='aplicar'?`<span class="lw${lSet.has(w.i)?' err':''}" data-i="${w.i}">${esc(w.w)}</span>`:esc(w.w)).join(' ')}</p>`).join('')+(mode==='alumno'&&L.f?`<p class="lfuente">${esc(L.f)}</p>`:'');
-  if(mode==='alumno'&&ims.length) body.innerHTML=ims.map((x,i)=>`<img class="limg" src="${x.u}" alt="Página ${i+1} de la lectura">`).join('');
+  body.innerHTML=(mode==='alumno'&&L.t?`<h2>${esc(L.t)}</h2>`:'')+tk.map(p=>`<p>${p.map(w=>mode==='aplicar'?`<span class="lw${lSet.has(w.i)?' err':''}" data-i="${w.i}">${esc(w.w)}</span>`:esc(w.w)).join(' ')}</p>`).join('');
   lTam(); el.hidden=false; document.body.style.overflow='hidden'; body.scrollTop=0;
   clearInterval(lTick); if(mode==='aplicar'){ lTick=setInterval(lecTick,100); lecTick(); }
   document.getElementById('lclose').focus();
@@ -916,21 +742,6 @@ function lecRec(){ if(!lA) return; if(tm&&tm.id===lA.id) detenerLectura(); else 
 function guardarLec(){ if(!lA) return; lA.ew=Array.from(lSet).sort((x,y)=>x-y); lA.ewn=lWords; lA.e=lA.ew.length; cerrarLec(); touch(); }
 function cerrarLec(){ clearInterval(lTick); const el=document.getElementById('lec'); if(el) el.hidden=true; document.body.style.overflow=''; lA=null; if(lPrev&&lPrev.focus&&document.contains(lPrev)) lPrev.focus(); }
 document.addEventListener('keydown',ev=>{ const el=document.getElementById('lec'); if(el&&!el.hidden&&ev.key==='Escape') cerrarLec(); });
-// ---------- Lectura como imagen (foto o captura de la página del manual) ----------
-const limgs=new Map(), limgLoad=new Set();
-const limgDe=()=>limgs.get(lk(S.g.grado,S.g.apl))||[];
-async function loadLimgs(){ const g=lk(S.g.grado,S.g.apl); if(!idb||limgLoad.has(g)) return; limgLoad.add(g); const arr=await idbImg('readonly',s=>s.get('lec|'+g)); if(Array.isArray(arr)&&arr.length){ limgs.set(g,arr.map(b=>({b,u:URL.createObjectURL(b)}))); if(tab==='l') render(); } }
-function guardarLimgs(){ const g=lk(S.g.grado,S.g.apl), arr=limgDe().map(x=>x.b); if(arr.length) idbImg('readwrite',s=>s.put(arr,'lec|'+g)); else idbImg('readwrite',s=>s.delete('lec|'+g)); }
-function agregarLimgs(files){ const im=Array.from(files||[]).filter(f=>f&&/^image\//.test(f.type)); if(!im.length) return 0; const g=lk(S.g.grado,S.g.apl), cur=limgDe().slice(); im.forEach(b=>cur.push({b,u:URL.createObjectURL(b)})); limgs.set(g,cur); limgLoad.add(g); guardarLimgs(); render(); return im.length; }
-document.addEventListener('paste',ev=>{ if(tab!=='l'||!S.g.ini) return; const fs=ev.clipboardData&&ev.clipboardData.files; if(fs&&Array.from(fs).some(f=>/^image\//.test(f.type))){ ev.preventDefault(); agregarLimgs(fs); } });
-function limgPanel(){
-  loadLimgs(); const arr=limgDe();
-  return `<div class="skill"><b>Lectura como imagen</b>
-    <p class="small">Si prefiere, use una foto o captura de la página del manual. Adjunte la imagen o péguela aquí con Ctrl+V. Puede agregar varias si la lectura ocupa más de una página. Al mostrar la lectura al alumno se usa la imagen.</p>
-    <div class="rowflex"><button class="btn" data-a="limgadd" data-k="limgadd">Agregar imagen</button><input id="limg" type="file" accept="image/*" multiple hidden data-limg="1" aria-label="Imagen de la lectura">${arr.length&&!contarPal(lectG().x)?`<button class="btn pri" data-a="lecver" data-k="lecver3">Mostrar al alumno</button>`:''}</div>
-    ${arr.length?`<div class="thumbs">${arr.map((x,i)=>`<div class="thumb"><img src="${x.u}" alt="Página ${i+1} de la lectura"><button class="btn danger" data-a="limgdel" data-i="${i}" data-k="limgdel-${i}">Quitar</button></div>`).join('')}</div>
-    <p class="muted small">Con imagen no se pueden marcar errores palabra por palabra: escriba el total de palabras y los errores en Precisión, en la ficha del alumno. Las imágenes se guardan solo en este dispositivo.</p>`:''}</div>`;
-}
 // ---------- Tarjetas de apoyo visual (cálculo mental) ----------
 // Se generan con el texto de cada pregunta. Si el docente adjunta una imagen (por ejemplo, la tarjeta oficial de la SEP), se muestra esa.
 let tAuto=true, tIdx=0, tT0=0, tTick=null, tPrev=null, timgIdx=0;
@@ -1382,9 +1193,6 @@ document.addEventListener('click',ev=>{
     if(!window.jspdf){ say('No se pudo cargar el generador de PDF.'); return; }
     let pb; try{ pb=pdfEscuela(rs).output('blob'); }catch(e){ say('No se pudo generar el PDF.'); return; }
     dl.save({filename:('Concentrado SisAT - '+nombreEsc(rs)+' - '+escApl+' aplicacion.pdf').replace(/[\\/:*?"<>|]/g,''),data:pb}).then(()=>say('PDF guardado. Ya puede imprimirlo o enviarlo.'),err=>{ if(!err||err.code!=='declined') say('No se pudo guardar el PDF en esta vista.'); }); }
-  else if(act==='limgadd'){ const fl2=document.getElementById('limg'); if(fl2) fl2.click(); }
-  else if(act==='limgdel'){ const cur=limgDe().slice(), x=cur.splice(+b.dataset.i,1)[0]; if(x) URL.revokeObjectURL(x.u); limgs.set(lk(S.g.grado,S.g.apl),cur); guardarLimgs(); render(); }
-  else if(act==='lecpdf'){ const fp=document.getElementById('lecpdf'); if(fp) fp.click(); }
   else if(act==='lecver'){ abrirLec('alumno'); }
   else if(act==='lecapl'&&a){ abrirLec('aplicar',a); }
   else if(act==='lecej'){ const Le=lectG(); Le.t=LEC_EJ.t; Le.x=LEC_EJ.x; Le.ej=true; S.g.palabras=contarPal(Le.x); touch(); }
@@ -1438,12 +1246,10 @@ document.addEventListener('submit',ev=>{
 });
 document.addEventListener('change',ev=>{
   const t=ev.target, a=S.a.find(x=>x.id===sel);
-  if(t.dataset.g){ S.g[t.dataset.g]=t.value; if(t.dataset.g==='escuela') renderFields(); if(t.dataset.g==='grado'||t.dataset.g==='apl'){ const Lq=S.g.lect&&S.g.lect[lk(S.g.grado,S.g.apl)]; if(Lq&&(Lq.x||Lq.pal)) S.g.palabras=Lq.pal||contarPal(Lq.x); } touch(); }
+  if(t.dataset.g){ S.g[t.dataset.g]=t.value; if(t.dataset.g==='escuela') renderFields(); if(t.dataset.g==='grado'){ const Lq=S.g.lect&&S.g.lect[t.value]; if(Lq&&Lq.x) S.g.palabras=contarPal(Lq.x); } touch(); }
   else if(t.dataset.n&&a){ a.n=t.value.trim()||a.n; touch(); }
-  else if(t.dataset.limg){ agregarLimgs(t.files); }
-  else if(t.dataset.lecpdf){ const fpdf=t.files&&t.files[0]; t.value=''; if(fpdf) importarManual(fpdf); }
   else if(t.dataset.lt){ lectG().t=t.value.trim(); touch(); }
-  else if(t.dataset.lx){ const Lx=lectG(); Lx.x=t.value; Lx.ej=false; Lx.imp=false; Lx.pal=0; if(Lx.x.trim()) S.g.palabras=contarPal(Lx.x); touch(); }
+  else if(t.dataset.lx){ const Lx=lectG(); Lx.x=t.value; Lx.ej=false; if(Lx.x.trim()) S.g.palabras=contarPal(Lx.x); touch(); }
   else if(t.dataset.lq){ lectG().q=t.value; touch(); }
   else if(t.dataset.timg){ const fm=t.files&&t.files[0]; t.value=''; if(fm){ const kk=tKey(timgIdx), old=timgs.get(kk); if(old) URL.revokeObjectURL(old); timgs.set(kk,URL.createObjectURL(fm)); idbImg('readwrite',s=>s.put(fm,kk)); render(); } }
   else if(t.dataset.tauto){ tAuto=t.checked; }
@@ -1457,7 +1263,13 @@ document.addEventListener('change',ev=>{
   else if(t.dataset.e&&a){ a.e=t.value; touch(); }
   else if(t.dataset.o&&a){ a.o=t.value; save(); }
 });
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+if('serviceWorker' in navigator){
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){
+    // En la computadora (prueba local) no se guarda copia: así siempre se ve la versión más reciente.
+    navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+    if(window.caches) caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
+  } else if(location.protocol==='https:'){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+}
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 renderFields(); render();
 </script>
