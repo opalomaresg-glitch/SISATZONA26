@@ -1,0 +1,43 @@
+LECTURAS DE CADA GRADO
+======================
+
+Ponga aquí las lecturas para que cada docente las vea en la pestaña Lectura.
+La app las busca por aplicación y grado, con estos nombres:
+
+  lecturas/primera/1-primaria.jpg      Primera aplicación, 1.º de primaria
+  lecturas/segunda/3-primaria.jpg      Segunda aplicación, 3.º de primaria
+  lecturas/tercera/2-secundaria.jpg    Tercera aplicación, 2.º de secundaria
+
+Si la lectura ocupa varias páginas, agregue -2, -3...:
+
+  lecturas/segunda/6-primaria.jpg
+  lecturas/segunda/6-primaria-2.jpg
+
+Formatos de imagen: .jpg, .png, .jpeg o .webp
+También sirve un PDF por grado:  lecturas/segunda/5-primaria.pdf
+
+Cómo obtener la imagen: abra la lectura (PDF o libro), haga una captura de
+pantalla de la página (en Windows: Windows + Shift + S) y guárdela con el
+nombre indicado.
+
+PREGUNTAS Y TOTAL DE PALABRAS (opcional)
+Cada carpeta de aplicación puede tener un archivo datos.json con la guía de
+preguntas y el total de palabras de cada grado. La app muestra esas preguntas
+en "Comprensión de la lectura" y usa el total en "Precisión". Ejemplo:
+
+  {
+    "3-primaria": {
+      "palabras": 214,
+      "indicacion": "Explique al alumno que ...",
+      "preguntas": [
+        { "p": "¿De qué trata la lectura?", "nota": "Si al responder ..." },
+        { "p": "¿Quién es Nicolás?" },
+        { "p": "¿Qué hacen los delfines ...?", "o": ["opción a", "opción b", "opción c"] }
+      ]
+    }
+  }
+
+Vea lecturas/primera/datos.json como modelo.
+
+Importante: todo lo que ponga en esta carpeta queda visible para cualquier
+persona que abra el sitio. Verifique que la escuela pueda publicar ese material.

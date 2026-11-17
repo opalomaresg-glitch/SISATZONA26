@@ -1,0 +1,65 @@
+{
+  "fuente": "Anexo 1. Materiales para la toma de lectura. Educación primaria. Guía de preguntas para el aplicador.",
+  "1-primaria": {
+    "palabras": 101,
+    "indicacion": "Explique al niño que al terminar la lectura le hará algunas preguntas, que le mostrará y leerá algunas respuestas y él elegirá la que considere correcta de acuerdo con lo que leyó.",
+    "preguntas": [
+      { "p": "¿De qué trata la lectura?", "nota": "Si al responder esta pregunta el niño sólo menciona o hace referencia al título agregue la pregunta ¿Y qué más? Por el contrario, si en su respuesta menciona las ideas o detalles relevantes, reconoce personajes, escenarios o resolución del tema, y sigue el orden del texto, es innecesario continuar con las preguntas posteriores." },
+      { "p": "¿Qué hacen los delfines cuando están contentos?", "o": ["Nadan en el mar y los océanos", "Se sumergen bajo el agua", "Dan grandes saltos fuera del agua"] },
+      { "p": "¿Para qué les sirve tener su hocico en punta?", "o": ["Para respirar abajo del agua", "Para defenderse de sus enemigos", "Para comer peces"] }
+    ]
+  },
+  "2-primaria": {
+    "palabras": 107,
+    "indicacion": "Explique al niño que al terminar la lectura le hará algunas preguntas, que le mostrará y leerá algunas respuestas y él elegirá la que considere correcta de acuerdo con lo que leyó.",
+    "preguntas": [
+      { "p": "¿De qué trata la lectura?", "nota": "Si al responder esta pregunta el niño sólo menciona o hace referencia al título agregue la pregunta ¿Y qué más? Por el contrario, si en su respuesta menciona las ideas o detalles relevantes, reconoce personajes, escenarios o resolución del tema, y sigue el orden del texto, es innecesario continuar con las preguntas posteriores." },
+      { "p": "¿Por qué no podía dormir Ramón?", "o": ["Porque no tenía sueño", "Porque tenía pesadillas", "Porque todo le preocupaba"] },
+      { "p": "¿Qué hizo su abuelita para que Ramón durmiera tranquilo?", "o": ["Puso unos “quitapesares” debajo de su almohada", "Le dio unos muñequitos de madera y tela para que les contara sus preocupaciones", "Le dijo que no se preocupara y que se lo contara a sus papás"] }
+    ]
+  },
+  "3-primaria": {
+    "palabras": 214,
+    "indicacion": "Explique al alumno que al terminar la lectura le hará algunas preguntas. Pídale que primero escuche y luego responda de acuerdo con lo que leyó.",
+    "preguntas": [
+      { "p": "¿De qué trata la lectura?", "nota": "Si al responder esta pregunta el niño sólo menciona o hace referencia al título agregue la pregunta ¿Y qué más? Por el contrario, si en su respuesta menciona las ideas o detalles relevantes, reconoce personajes, escenarios o resolución del tema, y sigue el orden del texto, es innecesario continuar con las preguntas posteriores." },
+      { "p": "¿Por qué no lograba dormir Martín?" },
+      { "p": "¿Qué era lo único que calmaba a Martín en la noche?" },
+      { "p": "¿Quién es Nicolás?" },
+      { "p": "¿Por qué Martín fue a la cocina sin hacer ruido?" }
+    ]
+  },
+  "4-primaria": {
+    "palabras": 252,
+    "indicacion": "Explique al alumno que al terminar la lectura le hará algunas preguntas. Pídale que primero escuche y luego responda de acuerdo con lo que leyó.",
+    "preguntas": [
+      { "p": "¿De qué trata la lectura?", "nota": "Si al responder esta pregunta el niño sólo menciona o hace referencia al título agregue la pregunta ¿Y qué más? Por el contrario, si en su respuesta menciona las ideas o detalles relevantes, reconoce personajes, escenarios o resolución del tema, y sigue el orden del texto, es innecesario continuar con las preguntas posteriores." },
+      { "p": "¿Cuánto tiempo tarda Rabicún en darle la vuelta al sol?" },
+      { "p": "¿Por qué construyeron el castillo de Rabicún hacia arriba?" },
+      { "p": "¿Por qué ponían cara de mal humor los habitantes de los pueblos cuando se encontraban?" },
+      { "p": "¿Qué harías con los niños del otro pueblo si vivieras en Rabicún?" }
+    ]
+  },
+  "5-primaria": {
+    "palabras": 299,
+    "indicacion": "Explique al alumno que al terminar la lectura le hará algunas preguntas. Pídale que primero escuche y luego responda de acuerdo con lo que leyó.",
+    "preguntas": [
+      { "p": "¿De qué trata la lectura?", "nota": "Si al responder esta pregunta el niño sólo menciona o hace referencia al título agregue la pregunta ¿Y qué más? Por el contrario, si en su respuesta menciona las ideas o detalles relevantes, reconoce personajes, escenarios o resolución del tema, y sigue el orden del texto, es innecesario continuar con las preguntas posteriores." },
+      { "p": "¿Qué trucos hacen los magos?" },
+      { "p": "¿Qué hizo el rey Gordias?" },
+      { "p": "¿Por qué querían deshacer el nudo del rey Gordias?" },
+      { "p": "¿Alejandro hizo un truco? ¿Cuál?" }
+    ]
+  },
+  "6-primaria": {
+    "palabras": 299,
+    "indicacion": "Explique al alumno que al terminar la lectura le hará algunas preguntas. Pídale que primero escuche y luego responda de acuerdo con lo que leyó.",
+    "preguntas": [
+      { "p": "¿De qué trata la lectura?", "nota": "Si al responder esta pregunta el niño sólo menciona o hace referencia al título agregue la pregunta ¿Y qué más? Por el contrario, si en su respuesta menciona las ideas o detalles relevantes, reconoce personajes, escenarios o resolución del tema, y sigue el orden del texto, es innecesario continuar con las preguntas posteriores." },
+      { "p": "¿Por qué León fue a buscar al Hombre?" },
+      { "p": "¿Qué hizo el Hombre cuando se encontró a León?" },
+      { "p": "¿Por qué León quería tener una jaula antes que Asno?" },
+      { "p": "¿Qué utilizó el hombre para librarse del León?" }
+    ]
+  }
+}

@@ -188,6 +188,20 @@ textarea{width:100%;min-height:120px;background:var(--surface);border:1px solid 
 .tri{display:flex;gap:6px}
 .tri button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 4px;cursor:pointer;font-weight:600;font-size:.85rem}
 .tri button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px}
+.thumb{display:flex;flex-direction:column;gap:4px;align-items:center;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit}
+.thumb img{width:120px;height:150px;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:8px;background:#fff}
+.thumb:hover img{border-color:var(--accent)}
+#vlec{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:#fff;color:#111}
+#vlec .vbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top,0px));border-bottom:1px solid #d6dcea;font-weight:700;color:#17203a}
+#vlec .vctl{display:flex;gap:8px}
+#vlec button{font:inherit;font-weight:600;min-height:44px;min-width:48px;padding:0 14px;border:1px solid #c7cde0;border-radius:8px;background:#f2f4f9;color:#17203a;cursor:pointer}
+#vlec .vbody{flex:1;min-height:0;overflow:auto;padding:12px max(12px,2vw);padding-bottom:max(24px,env(safe-area-inset-bottom,0px))}
+#vlec .vbody img{display:block;width:calc(var(--vz,1) * 100%);max-width:none;margin:0 auto 12px}
+@media (min-width:900px){#vlec .vbody img{width:calc(var(--vz,1) * 820px);max-width:none}}
+.qman{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.qman ol{margin:3px 0 0;padding-left:20px}
 footer{font-size:.82rem;color:var(--muted);max-width:75ch}
 </style>
 
@@ -407,13 +421,13 @@ function detenerLectura(){
   if(t.mr&&t.mr.state!=='inactive'){ t.mr.onstop=fin; try{ t.mr.stop(); }catch(e){ fin(); } } else fin();
 }
 function fluidez(a){
-  const run=tm&&tm.id===a.id, w=+S.g.palabras||0, s=+a.s||0, e=a.e===''||a.e==null?0:+a.e, au=audios.get(a.id);
+  const run=tm&&tm.id===a.id, w=palTexto(), s=+a.s||0, e=a.e===''||a.e==null?0:+a.e, au=audios.get(a.id);
   const mic=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
   let out='Tome el tiempo y escriba abajo, en Precisión, las palabras del texto para calcular las palabras por minuto.';
   if(w>0&&s>0){ const ppm=Math.round(w/s*60), pcm=Math.round(Math.max(0,w-e)/s*60), r=PPM[S.g.grado];
     out=`<b>${ppm} palabras por minuto</b>${e?` · ${pcm} correctas por minuto`:''}. `+(r?`Referencia SEP 2010 para ${S.g.grado}: ${r[0]} a ${r[1]} (${ppm<r[0]?'por debajo':ppm>r[1]?'por encima':'dentro'} del rango).`:''); }
   else if(s>0) out='Tiempo registrado. Escriba abajo, en Precisión, las palabras del texto para calcular las palabras por minuto.';
-  return `<div class="fluid"><div class="cn">Tiempo de lectura y grabación</div>
+  return `<div class="fluid"><div class="cn">Tiempo de lectura y grabación</div>${lecVerBtn()}
     <div class="rowflex"><span class="clock" id="clock">${fmt(run?(Date.now()-tm.t0)/1000:s)}</span>
       ${run?`<button class="btn pri" data-a="tstop" data-k="tbtn">${tm.mr?'Detener y guardar':'Detener'}</button>${tm.mr?'<span class="recind"><i></i>Grabando</span>':''}`:`<button class="btn pri" data-a="tstart" data-k="tbtn">${s?'Volver a tomar':'Iniciar lectura'}</button>`}
       ${s&&!run?`<button class="btn" data-a="treset" data-k="treset">Borrar tiempo</button>`:''}</div>
@@ -443,12 +457,12 @@ function capture(a,k){
       ${calcRows(a)}
       ${pend&&pend<10?`<div><button class="btn" data-a="fillx" data-k="fillx">Marcar las ${pend} restantes como incorrectas</button></div>`:''}`;
   } else {
-    const w=+S.g.palabras||0, e=a.e===''||a.e==null?null:+a.e;
+    const w=palTexto(), e=a.e===''||a.e==null?null:+a.e, palM=(datosGrado()||{}).palabras||0;
     let pc='';
     if(k==='l'){ let out='Escriba ambos datos para calcular el porcentaje de errores.';
       if(w>0&&e!=null&&e>=0){ const p=Math.round(e/w*100), sug=p<=3?3:p<=6?2:1;
         out=`<b>${p} % de errores</b> → puntaje sugerido <b>${sug}</b> <button class="btn" data-a="sug" data-v="${sug}" data-k="sug">Usar ${sug}</button>`; }
-      pc=`<div class="pcalc"><label>Palabras del texto <input class="inp" id="pw" type="number" min="1" inputmode="numeric" data-g="palabras" value="${esc(S.g.palabras||'')}"></label><label>Errores del alumno <input class="inp" id="pe" type="number" min="0" inputmode="numeric" data-e="1" value="${esc(a.e==null?'':a.e)}"></label><span>${out}</span></div>`; }
+      pc=`<div class="pcalc"><label>Palabras del texto${palM?` <span class="muted small">(manual: ${palM})</span>`:''} <input class="inp" id="pw" type="number" min="1" inputmode="numeric" data-g="palabras" value="${esc(S.g.palabras||'')}" placeholder="${palM||''}"></label><label>Errores del alumno <input class="inp" id="pe" type="number" min="0" inputmode="numeric" data-e="1" value="${esc(a.e==null?'':a.e)}"></label><span>${out}</span></div>`; }
     body=SK[k].rub.map((c,i)=>`<div class="comp"><span class="cn">${['I','II','III','IV','V','VI'][i]}. ${c.k}</span>
       ${k==='l'&&i===1?pc:''}
       <div class="opts">${c.o.map((o,j)=>{const v=3-j;return `<button class="opt v${v}" aria-pressed="${a[k][i]===v}" data-a="set" data-s="${k}" data-i="${i}" data-v="${v}" data-k="o-${k}-${i}-${v}"><b>${v}</b><span>${o[0]}</span></button>`}).join('')}</div>
@@ -457,7 +471,7 @@ function capture(a,k){
   return `<div class="skillhead"><input class="inp" id="nombre" data-n="1" value="${esc(a.n)}" aria-label="Nombre" style="font-weight:700;font-size:1.05rem;flex:1;min-width:10rem">
       ${S.a.length>1?`<button class="btn pri" data-a="next" data-k="next">Siguiente alumno</button>`:''}</div>
     <p class="muted small">Alumno ${S.a.indexOf(a)+1} de ${S.a.length} · ${SK[k].name}</p>
-    ${interp}${k==='l'?fluidez(a)+lecAlumno(a):''}${body}
+    ${interp}${k==='l'?fluidez(a):''}${body}${k==='l'?lecAlumno(a):''}
     <div class="skill"><label class="cn" for="obs">Observaciones</label><textarea id="obs" data-o="1" style="font-family:var(--body);font-size:.92rem;min-height:70px" placeholder="${k==='c'?'Estrategia de cálculo que usó, preguntas donde dudó…':k==='l'?'Actitud ante la lectura, palabras donde se detuvo…':'Tipo de texto, qué le costó más…'}">${esc(a.o)}</textarea></div>`;
 }
 function semaforo(k,open){
@@ -503,7 +517,7 @@ function viewSkill(k){
   if(!S.a.some(x=>x.id===sel)) sel=S.a[0].id;
   const a=S.a.find(x=>x.id===sel);
   const rows=S.a.map(x=>{const sc=score(x,k);return `<tr class="row${x.id===sel?' sel':''}" data-a="sel" data-v="${x.id}"><td><button class="rowbtn" data-a="sel" data-v="${x.id}" data-k="row-${x.id}">${esc(x.n)}</button></td><td style="width:96px">${profile(x,k)}</td><td>${pill(level(sc,k),sc,SK[k].max)}</td></tr>`}).join('');
-  return `<div class="space ev-${k}">${guide}${k==='c'?tarjetasPanel():''}
+  return `<div class="space ev-${k}">${guide}${k==='c'?tarjetasPanel():k==='l'?lecturaPanel():''}
     <div class="cols">
       <div class="panel"><h2>Alumnos</h2><div class="scroll"><table><thead><tr><th>Alumno</th><th>${k==='c'?'Preguntas':'Componentes'}</th><th>Nivel</th></tr></thead><tbody>${rows}</tbody></table></div>
         <div class="legend">${['e','d','r'].map(l=>`<span class="pill ${l}"><i></i>${LV[l]}</span>`).join('')}</div></div>
@@ -633,6 +647,88 @@ function pdfDoc(alumnos){
   });
   return doc;
 }
+// ---------- Lectura del grado (archivos de la carpeta "lecturas" del sitio) ----------
+// La escuela coloca en lecturas/<aplicación>/ una imagen por página: 3-primaria.jpg, 3-primaria-2.jpg…
+// o un PDF: 3-primaria.pdf. La app no trae lecturas propias: solo muestra lo que haya en esa carpeta.
+const vlec=new Map(); let vlSize=1, vPrev=null;
+const slugG=g=>String(g||'').replace('.º','').trim().replace(/\s+/g,'-').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const slugA=a=>String(a||'Primera').toLowerCase();
+const vlKey=()=>slugA(S.g.apl)+'/'+slugG(S.g.grado);
+const VEXT=['jpg','png','jpeg','webp'];
+// Preguntas de la guía y total de palabras: lecturas/<aplicación>/datos.json (lo aporta la escuela, igual que las imágenes).
+const vdat=new Map();
+async function cargarDatos(ap){
+  let d={};
+  try{ const r=await fetch('lecturas/'+ap+'/datos.json',{cache:'no-store'}); if(r.ok&&!/text\/html/i.test(r.headers.get('content-type')||'')) d=await r.json(); }catch(e){ d={}; }
+  vdat.set(ap,d&&typeof d==='object'?d:{}); if(tab==='l') render();
+}
+function datosGrado(){
+  const ap=slugA(S.g.apl); if(!vdat.has(ap)){ vdat.set(ap,null); cargarDatos(ap); return null; }
+  const d=vdat.get(ap), g=d&&d[slugG(S.g.grado)]; if(!g||typeof g!=='object') return null;
+  const pal=Math.round(+g.palabras)||0, pr=(Array.isArray(g.preguntas)?g.preguntas:[]).filter(q=>q&&typeof q.p==='string');
+  return {palabras:pal>0&&pal<5000?pal:0, indicacion:typeof g.indicacion==='string'?g.indicacion:'', preguntas:pr};
+}
+const palTexto=()=>+S.g.palabras||(datosGrado()||{}).palabras||0;
+function preguntasManual(dg){
+  return `<div><b class="small">Preguntas de la guía del manual</b>${dg.indicacion?`<p class="small muted" style="margin:2px 0 4px">${esc(dg.indicacion)}</p>`:''}
+    <ol class="small qman">${dg.preguntas.map(q=>`<li><span>${esc(q.p)}</span>${q.nota?`<span class="muted"> (${esc(q.nota)})</span>`:''}${Array.isArray(q.o)&&q.o.length?`<ol type="a">${q.o.map(o=>`<li>${esc(String(o))}</li>`).join('')}</ol>`:''}</li>`).join('')}</ol>
+    ${g12()?'<p class="muted small">En 1.º y 2.º solo se considera si identifica ideas o detalles.</p>':''}</div>`;
+}
+function probarImg(url){ return new Promise(r=>{ const im=new Image(); im.onload=()=>r(im.naturalWidth>0); im.onerror=()=>r(false); im.src=url; }); }
+async function probarPdf(url){ try{ const r=await fetch(url,{cache:'no-store'}); const ok=r.ok&&!/text\/html/i.test(r.headers.get('content-type')||''); try{ if(r.body) r.body.cancel(); }catch(e){} return ok; }catch(e){ return false; } }
+async function buscarLectura(k){
+  const base='lecturas/'+k, pags=[];
+  for(let n=1;n<=8;n++){
+    let hallada=null;
+    for(const e of VEXT){ const u=base+(n>1?'-'+n:'')+'.'+e; if(await probarImg(u)){ hallada=u; break; } }
+    if(!hallada) break; pags.push(hallada);
+  }
+  const pdf=!pags.length&&await probarPdf(base+'.pdf')?base+'.pdf':null;
+  vlec.set(k,{estado:'listo',pags,pdf});
+  if(tab==='l'&&vlKey()===k) render();
+}
+function lecturaInfo(){ const k=vlKey(); let v=vlec.get(k); if(!v){ v={estado:'buscando',pags:[],pdf:null}; vlec.set(k,v); buscarLectura(k); } return v; }
+function lecturaPanel(){
+  const v=lecturaInfo(), g=slugG(S.g.grado), ap=slugA(S.g.apl);
+  const dgp=(datosGrado()||{}).palabras;
+  const titulo=`<h2 class="hic ev-l">${ICON.l}Lectura de ${esc(S.g.grado)} · ${esc(S.g.apl)} aplicación</h2>${dgp?`<p class="small">Total de palabras de la lectura, según el manual: <b>${dgp}</b>.</p>`:''}`;
+  if(v.estado==='buscando') return `<div class="panel">${titulo}<p class="muted small">Buscando la lectura…</p></div>`;
+  if(v.pags.length) return `<div class="panel">${titulo}
+    <div class="thumbs">${v.pags.map((u,i)=>`<button class="thumb" data-a="vlec" data-v="${i}" data-k="vlec-${i}" aria-label="Ver la página ${i+1} en pantalla completa"><img src="${esc(u)}" alt="Página ${i+1} de la lectura" loading="lazy"><span class="small">Página ${i+1}</span></button>`).join('')}</div>
+    <div class="rowflex"><button class="btn pri" data-a="vlec" data-v="0" data-k="vlec">Ver en pantalla completa</button></div></div>`;
+  if(v.pdf) return `<div class="panel">${titulo}<div class="rowflex"><a class="btn pri" href="${esc(v.pdf)}" target="_blank" rel="noopener">Abrir la lectura (PDF)</a></div></div>`;
+  return `<div class="panel">${titulo}<p class="small">Todavía no hay lectura para este grado y aplicación.</p>
+    <details><summary class="small">Cómo agregarla</summary>
+      <p class="small">En el sitio publicado, sube a la carpeta <code>lecturas/${esc(ap)}/</code> una imagen llamada <code>${esc(g)}.jpg</code> (o .png). Si la lectura tiene más páginas: <code>${esc(g)}-2.jpg</code>, <code>${esc(g)}-3.jpg</code>… También sirve un PDF llamado <code>${esc(g)}.pdf</code>.</p>
+      <p class="muted small">Lo que pongas en esa carpeta queda visible para cualquiera que abra el sitio.</p></details></div>`;
+}
+function lecVerBtn(){
+  const v=vlec.get(vlKey()); if(!v) return '';
+  if(v.pags.length) return `<div><button class="btn" data-a="vlec" data-v="0" data-k="vlec-f">Ver la lectura</button></div>`;
+  if(v.pdf) return `<div><a class="btn" href="${esc(v.pdf)}" target="_blank" rel="noopener">Ver la lectura (PDF)</a></div>`;
+  return '';
+}
+function verLectura(i){
+  const v=vlec.get(vlKey()); if(!v||!v.pags.length) return;
+  let el=document.getElementById('vlec');
+  if(!el){
+    el=document.createElement('div'); el.id='vlec'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','Lectura del grado');
+    el.innerHTML='<div class="vbar"><span id="vtit"></span><span class="vctl"><button type="button" id="vmenos" aria-label="Más pequeña">A−</button><button type="button" id="vmas" aria-label="Más grande">A+</button><button type="button" id="vcerrar">Cerrar</button></span></div><div class="vbody" id="vbody"></div>';
+    document.body.appendChild(el);
+    el.addEventListener('click',ev=>{ const b=ev.target.closest&&ev.target.closest('button'); if(!b) return;
+      if(b.id==='vmas'){ vlSize=Math.min(3,vlSize+0.25); vTam(); } else if(b.id==='vmenos'){ vlSize=Math.max(0.5,vlSize-0.25); vTam(); } else if(b.id==='vcerrar') cerrarLectura(); });
+  }
+  vPrev=document.activeElement;
+  document.getElementById('vtit').textContent=`Lectura de ${S.g.grado} · ${S.g.apl} aplicación`;
+  const body=document.getElementById('vbody');
+  body.innerHTML=v.pags.map((u,n)=>`<img src="${esc(u)}" alt="Página ${n+1} de la lectura" id="vp-${n}">`).join('');
+  vTam(); el.hidden=false; document.body.style.overflow='hidden'; body.scrollTop=0;
+  if(i){ const t=document.getElementById('vp-'+i); if(t) setTimeout(()=>t.scrollIntoView({block:'start'}),60); }
+  document.getElementById('vcerrar').focus();
+}
+function vTam(){ const b=document.getElementById('vbody'); if(b) b.style.setProperty('--vz',String(vlSize)); }
+function cerrarLectura(){ const el=document.getElementById('vlec'); if(el) el.hidden=true; document.body.style.overflow=''; if(vPrev&&vPrev.focus&&document.contains(vPrev)) vPrev.focus(); }
+document.addEventListener('keydown',ev=>{ const el=document.getElementById('vlec'); if(el&&!el.hidden&&ev.key==='Escape') cerrarLectura(); });
 // ---------- Comprensión de la lectura ----------
 const PREG_COMP=[
   '¿De qué trata el texto? Cuéntalo con tus palabras.',
@@ -649,9 +745,10 @@ function lecAlumno(a){
   const inds=g12()?CIND.slice(0,1):CIND, v=a.ci||[null,null,null];
   const ok=inds.every((_,i)=>v[i]!=null);
   const sug=ok?(inds.every((_,i)=>v[i]===2)?3:inds.every((_,i)=>v[i]===0)?1:2):null;
+  const dg=datosGrado(), oficial=dg&&dg.preguntas.length;
   return `<div class="fluid" style="background:var(--sunk)"><div class="cn">Comprensión de la lectura</div>
-    <div><b class="small">Preguntas de comprensión</b><ol class="small" style="margin:4px 0 0;padding-left:20px">${preguntasDe().map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
-      <p class="muted small">Son preguntas guía generales, redactadas para esta app a partir de la rúbrica; no son las preguntas oficiales de cada texto.${g12()?' En 1.º y 2.º solo se considera si identifica ideas o detalles.':''} Según el manual, si con la primera pregunta el alumno identifica ideas o detalles relevantes, reconoce personajes, escenario o resolución y sigue el orden del texto, no hace falta continuar con las demás.</p></div>
+    ${oficial?preguntasManual(dg):`<div><b class="small">Preguntas de comprensión</b><ol class="small" style="margin:4px 0 0;padding-left:20px">${preguntasDe().map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
+      <p class="muted small">Son preguntas guía generales, redactadas para esta app a partir de la rúbrica; no son las preguntas oficiales de cada texto.${g12()?' En 1.º y 2.º solo se considera si identifica ideas o detalles.':''} Según el manual, si con la primera pregunta el alumno identifica ideas o detalles relevantes, reconoce personajes, escenario o resolución y sigue el orden del texto, no hace falta continuar con las demás.</p></div>`}
     <div class="cn">¿Qué mostró el alumno?</div>
     ${inds.map((t,i)=>`<div class="comp"><span class="small">${t}</span><div class="tri">${[[0,'No'],[1,'En parte'],[2,'Sí']].map(([x,l])=>`<button type="button" aria-pressed="${v[i]===x}" data-a="ci" data-i="${i}" data-v="${x}" data-k="ci-${i}-${x}">${l}</button>`).join('')}</div></div>`).join('')}
     ${sug?`<p class="small">Sugerencia para el componente VI (comprensión): <b>${sug}</b> <button class="btn" data-a="lecsug" data-v="${sug}" data-k="lecsug">Usar ${sug}</button></p>`:`<p class="muted small">Marque los indicadores para ver una sugerencia de puntaje. El puntaje final lo decide usted con la rúbrica.</p>`}</div>`;
@@ -984,7 +1081,7 @@ function informeDatos(a){
     if(k!=='c') o.areas.sort((x,y)=>(x.tipo==='prioritaria'?0:1)-(y.tipo==='prioritaria'?0:1));
     return o; });
 }
-function ppmDe(a){ const w=+S.g.palabras||0, s=+a.s||0; return w>0&&s>0?Math.round(w/s*60):null; }
+function ppmDe(a){ const w=palTexto(), s=+a.s||0; return w>0&&s>0?Math.round(w/s*60):null; }
 const hoy=()=>new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
 function informeHTML(a){
   const d=informeDatos(a), rojos=d.filter(o=>o.lv==='r'), pend=d.filter(o=>!o.lv);
@@ -1107,6 +1204,7 @@ document.addEventListener('click',ev=>{
     if(!window.jspdf){ say('No se pudo cargar el generador de PDF.'); return; }
     let pb; try{ pb=pdfEscuela(rs).output('blob'); }catch(e){ say('No se pudo generar el PDF.'); return; }
     dl.save({filename:('Concentrado SisAT - '+nombreEsc(rs)+' - '+escApl+' aplicacion.pdf').replace(/[\\/:*?"<>|]/g,''),data:pb}).then(()=>say('PDF guardado. Ya puede imprimirlo o enviarlo.'),err=>{ if(!err||err.code!=='declined') say('No se pudo guardar el PDF en esta vista.'); }); }
+  else if(act==='vlec'){ verLectura(+b.dataset.v); }
   else if(act==='lecsug'&&a){ a.l[5]=+b.dataset.v; touch(); }
   else if(act==='ci'&&a){ a.ci=a.ci||[null,null,null]; const ci=+b.dataset.i, cv=+b.dataset.v; a.ci[ci]=a.ci[ci]===cv?null:cv; touch(); }
   else if(act==='tarj'){ abrirTarjeta(+b.dataset.i); }
