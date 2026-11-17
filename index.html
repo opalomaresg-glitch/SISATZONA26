@@ -202,22 +202,101 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 @media (min-width:900px){#vlec .vbody img{width:calc(var(--vz,1) * 820px);max-width:none}}
 .qman{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .qman ol{margin:3px 0 0;padding-left:20px}
+/* ---------- Rediseño (versión de prueba) ---------- */
+.wrap{padding-block:0 48px;gap:16px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:41;background:var(--bg)}
+.tb-tit{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.tb-txt{display:flex;flex-direction:column;min-width:0}
+.tb-txt b{font-family:var(--display);font-size:1.2rem;line-height:1.2}
+.tb-txt span{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 12px;font:inherit;font-weight:600;font-size:.85rem;color:var(--accent);cursor:pointer;flex:none}
+.tb-chip svg{width:18px;height:18px}
+.fieldsbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.fb-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.panel{border-radius:14px}
+.btn{min-height:40px;border-radius:10px}
+.opt{min-height:48px;border-radius:10px}
+.nb{display:flex;align-items:center;gap:10px;background:none;border:0;cursor:pointer;color:var(--muted);font:inherit;font-weight:600}
+.nb svg{width:22px;height:22px;flex:none}
+.nb[aria-selected="true"]{color:var(--accent)}
+.nb.ev-l[aria-selected="true"],.nb.ev-t[aria-selected="true"],.nb.ev-c[aria-selected="true"]{color:var(--c)}
+.side-tit{display:none}
+.mas-menu{display:none}
+@media (min-width:900px){
+  .app{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:100vh}
+  .app.sin-nav{grid-template-columns:minmax(0,1fr)}
+  .app.sin-nav .side{display:none}
+  .side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;padding:18px 12px;border-right:1px solid var(--line);background:var(--surface)}
+  .side-tit{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-family:var(--display);font-size:1.1rem}
+  .side-tit .logo{width:32px;height:32px;border-radius:9px}
+  .side-tit .logo svg{width:18px;height:18px}
+  .nb{padding:10px 12px;border-radius:10px;width:100%;text-align:left}
+  .nb:hover{background:var(--sunk);color:var(--ink)}
+  .nb[aria-selected="true"]{background:var(--accent-soft)}
+  .nb.ev-l[aria-selected="true"]{background:var(--lec-bg)} .nb.ev-t[aria-selected="true"]{background:var(--txt-bg)} .nb.ev-c[aria-selected="true"]{background:var(--cal-bg)}
+  .mas-btn{display:none}
+  .wrap{max-width:1120px;margin:0;width:100%}
+}
+@media (max-width:899px){
+  .side{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .app.sin-nav .side{display:none}
+  .nb{flex-direction:column;gap:3px;font-size:.72rem;padding:6px 2px;flex:1;min-width:0;border-radius:10px}
+  .nb.extra{display:none}
+  .mas-menu:not([hidden]){display:flex;flex-direction:column;position:absolute;right:8px;bottom:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.2);min-width:190px}
+  .mas-menu button{display:flex;align-items:center;gap:10px;background:none;border:0;padding:12px;border-radius:10px;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;text-align:left}
+  .mas-menu button[aria-selected="true"]{color:var(--accent);background:var(--accent-soft)}
+  .mas-menu svg{width:20px;height:20px}
+  .wrap{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .app.sin-nav .wrap{padding-bottom:24px}
+}
+.alsw{display:flex;align-items:center;gap:8px}
+.alsw-c{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:center}
+.alsw-c .inp{font-weight:700;font-size:1.05rem;width:100%;text-align:center}
+.btn.ico{width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.btn.ico svg{width:22px;height:22px}
+.pasos{display:flex;gap:6px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 66px);z-index:5;background:var(--surface);padding:6px 0}
+.paso{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 4px;cursor:pointer;font:inherit;font-size:.85rem;font-weight:600;color:var(--muted);min-width:0}
+.paso b{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:var(--sunk);font-size:.78rem;flex:none}
+.paso.ok{color:var(--ok);border-color:transparent;background:var(--ok-bg)}
+.paso svg{width:18px;height:18px;flex:none}
+[id^="sec-"]{scroll-margin-top:136px}
+.avance{gap:12px}
+.av-num{font-family:var(--display);font-size:1.9rem;font-weight:700;line-height:1.15}
+.av-num span{font-family:var(--body);font-size:.9rem;font-weight:500;color:var(--muted)}
+.av-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:600px){.av-grid{grid-template-columns:minmax(0,1fr)}}
+.av{background:var(--sunk);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.av-h{display:flex;align-items:center;gap:8px;color:var(--c)} .av-h b{flex:1} .av-h svg{width:20px;height:20px}
+.bar.sm{height:10px}
+.tb-txt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:600px){
+  .chip-x{display:none}
+  .gt thead{display:none}
+  .gt tbody tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .gt td{border:0;padding:0;min-width:0}
+  .gt td:first-child{grid-column:1/-1;font-size:1rem}
+  .gt td:last-child{grid-column:1/-1;text-align:left!important;display:flex;gap:8px}
+  .gt td[data-l]::before{content:attr(data-l);display:block;font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+}
 footer{font-size:.82rem;color:var(--muted);max-width:75ch}
 </style>
 
 </head>
 <body>
+<div class="app" id="app">
+<nav class="side" id="tabs" role="tablist" aria-label="Secciones"></nav>
 <div class="wrap">
-  <div class="head">
-    <div>
-      <h1>Captura SisAT</h1>
-      <p class="muted">Lectura, producción de textos escritos y cálculo mental: registro por alumno e interpretación del grupo.</p>
-    </div>
-    <div class="fields" id="fields"></div>
-  </div>
-  <div class="tabs" role="tablist" id="tabs"></div>
+  <header class="topbar" id="topbar">
+    <div class="tb-tit"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h6M8 16h4"/></svg></span>
+      <div class="tb-txt"><b id="tb-g">Captura SisAT</b><span id="tb-s">Lectura, producción de textos escritos y cálculo mental</span></div></div>
+    <button class="tb-chip" id="tb-chip" data-a="cfg" data-k="cfg" hidden></button>
+  </header>
+  <div class="fieldsbox" id="fieldsbox" hidden><div class="fb-head"><b>Datos del grupo</b><button class="btn" data-a="cfg" data-k="cfg-x">Listo</button></div><div class="fields" id="fields"></div></div>
   <div id="view"></div>
   <footer>Rúbricas, rangos y criterios de interpretación tomados del manual de la SEP “Exploración de habilidades básicas en lectura, producción de textos escritos y cálculo mental. Herramienta para la escuela” (2018). Los datos se guardan solo en este navegador; use la pestaña Datos para respaldarlos.</footer>
+</div>
 </div>
 
 <script src="vendor/jspdf.umd.min.js"></script>
@@ -334,15 +413,41 @@ function renderFields(){
     <label>Ciclo escolar<input id="f-ciclo" class="sm" style="width:7rem" data-g="ciclo" value="${esc(g.ciclo)}"></label>
     <label>Aplicación<select id="f-apl" data-g="apl">${['Primera','Segunda','Tercera'].map(x=>`<option${x===g.apl?' selected':''}>${x}</option>`).join('')}</select></label>`;
 }
-const TABS=[['grupo','Grupo'],['l','Lectura'],['t','Producción de textos'],['c','Cálculo mental'],['informe','Informes'],['escuela','Escuela'],['datos','Datos']];
+const TABS=[['grupo','Grupo'],['l','Lectura'],['t','Textos'],['c','Cálculo'],['informe','Informes'],['escuela','Escuela'],['datos','Datos']];
+const EXTRA=['informe','escuela','datos'];
+let masOpen=false;
 function renderTabs(){
-  document.getElementById('tabs').innerHTML=!S.g.ini?'':TABS.map(([k,t])=>`<button role="tab" class="${SK[k]?'ev-'+k:''}" aria-selected="${tab===k}" data-a="tab" data-v="${k}" data-k="tab-${k}">${SK[k]?ICON[k]:''}${t}</button>`).join('');
+  const nav=document.getElementById('tabs'), app=document.getElementById('app');
+  if(app) app.classList.toggle('sin-nav',!S.g.ini);
+  if(!S.g.ini){ nav.innerHTML=''; return; }
+  const enExtra=EXTRA.includes(tab);
+  nav.innerHTML=`<div class="side-tit"><span class="logo" aria-hidden="true">${ICON.app}</span><b>SisAT</b></div>`+
+    TABS.map(([k,t])=>`<button role="tab" class="nb${SK[k]?' ev-'+k:''}${EXTRA.includes(k)?' extra':''}" aria-selected="${tab===k}" data-a="tab" data-v="${k}" data-k="tab-${k}">${ICON[k]||''}<span>${t}</span></button>`).join('')+
+    `<button class="nb mas-btn" aria-expanded="${masOpen}" aria-selected="${enExtra}" data-a="mas" data-k="tab-mas">${ICON.mas}<span>Más</span></button>`+
+    `<div class="mas-menu" ${masOpen?'':'hidden'}>${TABS.filter(([k])=>EXTRA.includes(k)).map(([k,t])=>`<button aria-selected="${tab===k}" data-a="tab" data-v="${k}" data-k="mas-${k}">${ICON[k]}<span>${t}</span></button>`).join('')}</div>`;
+}
+function renderTop(){
+  const g=document.getElementById('tb-g'), s=document.getElementById('tb-s'), chip=document.getElementById('tb-chip'); if(!g) return;
+  if(!S.g.ini){ g.textContent='Captura SisAT'; s.textContent='Lectura, producción de textos escritos y cálculo mental'; chip.hidden=true; return; }
+  g.textContent=`Grupo ${S.g.grado} ${S.g.grupo}`; s.textContent=S.g.escuela||'Captura SisAT';
+  g.textContent=`${S.g.grado.replace(' primaria','').replace(' secundaria',' sec.')} ${S.g.grupo} · ${/secundaria/.test(S.g.grado)?'Secundaria':'Primaria'}`;
+  chip.hidden=false; chip.innerHTML=`<span>${esc(S.g.apl)}<span class="chip-x"> aplicación</span></span>${ICON.ajustes}`; chip.setAttribute('aria-label','Datos del grupo: '+S.g.apl+' aplicación');
 }
 const svg=p=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const ICON={
   l:svg('<path d="M12 6c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-13c-3-.5-6 0-8 1.5z"/><path d="M12 6v13"/>'),
   t:svg('<path d="M4 20l1-5L16 4l4 4L9 19l-5 1z"/><path d="M14 6l4 4"/>'),
-  c:svg('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>')
+  c:svg('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>'),
+  grupo:svg('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.6c2.3.2 4 1.6 4.6 4.4"/>'),
+  informe:svg('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>'),
+  escuela:svg('<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/>'),
+  datos:svg('<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>'),
+  mas:svg('<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>'),
+  ajustes:svg('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
+  app:svg('<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h6M8 16h4"/>'),
+  izq:svg('<path d="M15 5l-7 7 7 7"/>'),
+  der:svg('<path d="M9 5l7 7-7 7"/>'),
+  ok:svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>')
 };
 const GUIA={
   l:{modo:'Individual · lectura en voz alta de un texto del grado',
@@ -427,7 +532,7 @@ function fluidez(a){
   if(w>0&&s>0){ const ppm=Math.round(w/s*60), pcm=Math.round(Math.max(0,w-e)/s*60), r=PPM[S.g.grado];
     out=`<b>${ppm} palabras por minuto</b>${e?` · ${pcm} correctas por minuto`:''}. `+(r?`Referencia SEP 2010 para ${S.g.grado}: ${r[0]} a ${r[1]} (${ppm<r[0]?'por debajo':ppm>r[1]?'por encima':'dentro'} del rango).`:''); }
   else if(s>0) out='Tiempo registrado. Escriba abajo, en Precisión, las palabras del texto para calcular las palabras por minuto.';
-  return `<div class="fluid"><div class="cn">Tiempo de lectura y grabación</div>${lecVerBtn()}
+  return `<div class="fluid" id="sec-tiempo"><div class="cn">Tiempo de lectura y grabación</div>${lecVerBtn()}
     <div class="rowflex"><span class="clock" id="clock">${fmt(run?(Date.now()-tm.t0)/1000:s)}</span>
       ${run?`<button class="btn pri" data-a="tstop" data-k="tbtn">${tm.mr?'Detener y guardar':'Detener'}</button>${tm.mr?'<span class="recind"><i></i>Grabando</span>':''}`:`<button class="btn pri" data-a="tstart" data-k="tbtn">${s?'Volver a tomar':'Iniciar lectura'}</button>`}
       ${s&&!run?`<button class="btn" data-a="treset" data-k="treset">Borrar tiempo</button>`:''}</div>
@@ -462,15 +567,17 @@ function capture(a,k){
     if(k==='l'){ let out='Escriba ambos datos para calcular el porcentaje de errores.';
       if(w>0&&e!=null&&e>=0){ const p=Math.round(e/w*100), sug=p<=3?3:p<=6?2:1;
         out=`<b>${p} % de errores</b> → puntaje sugerido <b>${sug}</b> <button class="btn" data-a="sug" data-v="${sug}" data-k="sug">Usar ${sug}</button>`; }
-      pc=`<div class="pcalc"><label>Palabras del texto${palM?` <span class="muted small">(manual: ${palM})</span>`:''} <input class="inp" id="pw" type="number" min="1" inputmode="numeric" data-g="palabras" value="${esc(S.g.palabras||'')}" placeholder="${palM||''}"></label><label>Errores del alumno <input class="inp" id="pe" type="number" min="0" inputmode="numeric" data-e="1" value="${esc(a.e==null?'':a.e)}"></label><span>${out}</span></div>`; }
-    body=SK[k].rub.map((c,i)=>`<div class="comp"><span class="cn">${['I','II','III','IV','V','VI'][i]}. ${c.k}</span>
+      pc=`<div class="pcalc"><label>Palabras del texto${palM?` <span class="muted small">(manual: ${palM})</span>`:''} <input class="inp" id="pw" type="number" min="1" inputmode="numeric" data-pw="1" value="${palPropio()||(palM?'':esc(S.g.palabras||''))}" placeholder="${palM||''}"></label><label>Errores del alumno <input class="inp" id="pe" type="number" min="0" inputmode="numeric" data-e="1" value="${esc(a.e==null?'':a.e)}"></label><span>${out}</span></div>`; }
+    body=SK[k].rub.map((c,i)=>`<div class="comp" id="sec-${k}-${i}"><span class="cn">${['I','II','III','IV','V','VI'][i]}. ${c.k}</span>
       ${k==='l'&&i===1?pc:''}
       <div class="opts">${c.o.map((o,j)=>{const v=3-j;return `<button class="opt v${v}" aria-pressed="${a[k][i]===v}" data-a="set" data-s="${k}" data-i="${i}" data-v="${v}" data-k="o-${k}-${i}-${v}"><b>${v}</b><span>${o[0]}</span></button>`}).join('')}</div>
       <details><summary>Qué observar en cada puntaje</summary>${c.o.map((o,j)=>`<div class="dl">${3-j} · ${o[0]}</div><ul>${o[1].map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}</details></div>`).join('');
   }
-  return `<div class="skillhead"><input class="inp" id="nombre" data-n="1" value="${esc(a.n)}" aria-label="Nombre" style="font-weight:700;font-size:1.05rem;flex:1;min-width:10rem">
-      ${S.a.length>1?`<button class="btn pri" data-a="next" data-k="next">Siguiente alumno</button>`:''}</div>
-    <p class="muted small">Alumno ${S.a.indexOf(a)+1} de ${S.a.length} · ${SK[k].name}</p>
+  const nci=g12()?1:3, pasos=k==='l'?[['sec-tiempo','Tiempo',+a.s>0],['sec-l-0','Rúbrica',a.l.every(v=>v!=null)],['sec-comp','Comprensión',(a.ci||[]).slice(0,nci).filter(v=>v!=null).length===nci]]:[];
+  return `<div class="alsw">${S.a.length>1?`<button class="btn ico" data-a="prev" data-k="prev" aria-label="Alumno anterior">${ICON.izq}</button>`:''}
+      <div class="alsw-c"><input class="inp" id="nombre" data-n="1" value="${esc(a.n)}" aria-label="Nombre del alumno"><span class="muted small">Alumno ${S.a.indexOf(a)+1} de ${S.a.length} · ${SK[k].name}</span></div>
+      ${S.a.length>1?`<button class="btn ico" data-a="next" data-k="next" aria-label="Siguiente alumno">${ICON.der}</button>`:''}</div>
+    ${pasos.length?`<div class="pasos">${pasos.map(([id,t,ok],i)=>`<button class="paso${ok?' ok':''}" data-a="paso" data-v="${id}" data-k="paso-${i}">${ok?ICON.ok:`<b>${i+1}</b>`}<span>${t}</span></button>`).join('')}</div>`:''}
     ${interp}${k==='l'?fluidez(a):''}${body}${k==='l'?lecAlumno(a):''}
     <div class="skill"><label class="cn" for="obs">Observaciones</label><textarea id="obs" data-o="1" style="font-family:var(--body);font-size:.92rem;min-height:70px" placeholder="${k==='c'?'Estrategia de cálculo que usó, preguntas donde dudó…':k==='l'?'Actitud ante la lectura, palabras donde se detuvo…':'Tipo de texto, qué le costó más…'}">${esc(a.o)}</textarea></div>`;
 }
@@ -526,9 +633,19 @@ function viewSkill(k){
     <h2 class="hic">${ICON[k]}Resultados del grupo en ${SK[k].name.toLowerCase()}</h2>
     <div class="grid3">${semaforo(k)}${k==='c'?calcPanel():compPanel(k)}${mapa(k)}</div></div>`;
 }
+function avanceGrupo(){
+  const n=S.a.length; if(!n) return '';
+  const card=k=>{ const s=groupStats(k), p=pct(s.n,n);
+    return `<div class="av ev-${k}"><div class="av-h">${ICON[k]}<b>${SK[k].short}</b><span class="muted small">${s.n} de ${n}</span></div>
+      <div class="meter" title="Capturas completas"><div style="width:${p}%;background:var(--c)"></div></div>
+      ${s.n?`<div class="bar sm" role="img" aria-label="Esperado ${s.d.e}, en desarrollo ${s.d.d}, requiere apoyo ${s.d.r}">${['e','d','r'].map(l=>s.d[l]?`<div class="${l}" style="width:${s.d[l]/s.n*100}%"></div>`:'').join('')}</div>`:'<span class="muted small">Sin capturas completas</span>'}</div>`; };
+  const tres=S.a.filter(a=>['l','t','c'].every(k=>score(a,k)!=null)).length;
+  return `<div class="panel avance"><div><span class="muted small">Avance de la captura</span><div class="av-num">${tres} <span>de ${n} ${n===1?'alumno':'alumnos'} con las tres evaluaciones</span></div></div>
+    <div class="av-grid">${card('l')}${card('t')}${card('c')}</div></div>`;
+}
 function viewResumen(){
   const rows=S.a.map(a=>{
-    const cells=['l','t','c'].map(k=>{const sc=score(a,k);return `<td><button class="rowbtn" data-a="go" data-v="${a.id}" data-s="${k}" data-k="go-${a.id}-${k}" aria-label="Abrir ${SK[k].short} de ${esc(a.n)}">${pill(level(sc,k),sc,SK[k].max)}</button></td>`}).join('');
+    const cells=['l','t','c'].map(k=>{const sc=score(a,k);return `<td data-l="${SK[k].short}"><button class="rowbtn" data-a="go" data-v="${a.id}" data-s="${k}" data-k="go-${a.id}-${k}" aria-label="Abrir ${SK[k].short} de ${esc(a.n)}">${pill(level(sc,k),sc,SK[k].max)}</button></td>`}).join('');
     const del= confirmDel===a.id ? `<button class="btn danger" data-a="del" data-k="del">Sí, quitar</button> <button class="btn" data-a="nodel" data-k="nodel">No</button>` : `<button class="btn" data-a="askdel" data-v="${a.id}" data-k="askdel-${a.id}" aria-label="Quitar a ${esc(a.n)}">Quitar</button>`;
     return `<tr><td><b>${esc(a.n)}</b></td>${cells}<td style="text-align:right;white-space:nowrap"><button class="btn" data-a="inf" data-v="${a.id}" data-k="inf-${a.id}">Informe</button> ${del}</td></tr>`;
   }).join('');
@@ -541,11 +658,12 @@ function viewResumen(){
       return `<tr><td><b>${esc(x.a.n)}</b></td><td>${x.r.map(k=>`<button class="rowbtn" data-a="go" data-v="${x.a.id}" data-s="${k}" data-k="ap-${x.a.id}-${k}"><span class="pill r"><i></i>${SK[k].short}</span></button>`).join(' ')}</td><td class="small">${comps.join(', ')||'—'}</td></tr>`}).join('')}</tbody></table></div>
       <p class="small muted">Su atención es de la mayor prioridad y prontitud. El manual sugiere reunir información adicional: asistencia y participación, conducta y relación con docentes y compañeros, y qué estrategias ya se intentaron.</p>`:'<p class="muted">Ningún alumno evaluado está en “requiere apoyo”.</p>'}</div>`;
   return `<div style="display:flex;flex-direction:column;gap:16px">
+    ${avanceGrupo()}
     ${S.ej?`<div class="note"><span><b>Este alumno es un ejemplo</b> para mostrar cómo funciona la herramienta. No son datos reales.</span><button class="btn pri" data-a="start" data-k="start">Empezar con mi grupo</button></div>`:''}
     <div class="panel">
       <h2>Grupo ${esc(S.g.grado)} ${esc(S.g.grupo)} <span class="muted small" style="font-family:var(--body);font-weight:500">· ${S.a.length} alumnos</span></h2>
       <form class="addrow" id="addform"><input class="inp" id="nuevo" placeholder="Nombre del alumno" aria-label="Nombre del alumno" autocomplete="off"><button class="btn pri" type="submit">Agregar</button></form>
-      <div class="scroll"><table><thead><tr><th>Alumno</th><th>Lectura</th><th>Textos</th><th>Cálculo</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">Agregue a su primer alumno con el campo de arriba.</td></tr>'}</tbody></table></div>
+      <div class="scroll"><table class="gt"><thead><tr><th>Alumno</th><th>Lectura</th><th>Textos</th><th>Cálculo</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">Agregue a su primer alumno con el campo de arriba.</td></tr>'}</tbody></table></div>
       <p class="muted small">Toque un nivel para abrir esa evaluación del alumno. En 1.º de primaria no se aplica antes del segundo semestre; si aplica en septiembre u octubre, use los instrumentos del grado anterior cursado.</p>
     </div>
     ${prio}
@@ -668,7 +786,11 @@ function datosGrado(){
   const pal=Math.round(+g.palabras)||0, pr=(Array.isArray(g.preguntas)?g.preguntas:[]).filter(q=>q&&typeof q.p==='string');
   return {palabras:pal>0&&pal<5000?pal:0, indicacion:typeof g.indicacion==='string'?g.indicacion:'', preguntas:pr};
 }
-const palTexto=()=>+S.g.palabras||(datosGrado()||{}).palabras||0;
+// Total de palabras: lo que el docente escriba para ese grado y aplicación; si no, el del manual;
+// el número único de versiones anteriores (S.g.palabras) solo se usa donde no hay dato del manual.
+const pwKey=()=>slugA(S.g.apl)+'/'+slugG(S.g.grado);
+const palPropio=()=>Math.round(+((S.g.palx||{})[pwKey()]))||0;
+const palTexto=()=>palPropio()||(datosGrado()||{}).palabras||(+S.g.palabras||0);
 function preguntasManual(dg){
   return `<div><b class="small">Preguntas de la guía del manual</b>${dg.indicacion?`<p class="small muted" style="margin:2px 0 4px">${esc(dg.indicacion)}</p>`:''}
     <ol class="small qman">${dg.preguntas.map(q=>`<li><span>${esc(q.p)}</span>${q.nota?`<span class="muted"> (${esc(q.nota)})</span>`:''}${Array.isArray(q.o)&&q.o.length?`<ol type="a">${q.o.map(o=>`<li>${esc(String(o))}</li>`).join('')}</ol>`:''}</li>`).join('')}</ol>
@@ -746,7 +868,7 @@ function lecAlumno(a){
   const ok=inds.every((_,i)=>v[i]!=null);
   const sug=ok?(inds.every((_,i)=>v[i]===2)?3:inds.every((_,i)=>v[i]===0)?1:2):null;
   const dg=datosGrado(), oficial=dg&&dg.preguntas.length;
-  return `<div class="fluid" style="background:var(--sunk)"><div class="cn">Comprensión de la lectura</div>
+  return `<div class="fluid" id="sec-comp" style="background:var(--sunk)"><div class="cn">Comprensión de la lectura</div>
     ${oficial?preguntasManual(dg):`<div><b class="small">Preguntas de comprensión</b><ol class="small" style="margin:4px 0 0;padding-left:20px">${preguntasDe().map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
       <p class="muted small">Son preguntas guía generales, redactadas para esta app a partir de la rúbrica; no son las preguntas oficiales de cada texto.${g12()?' En 1.º y 2.º solo se considera si identifica ideas o detalles.':''} Según el manual, si con la primera pregunta el alumno identifica ideas o detalles relevantes, reconoce personajes, escenario o resolución y sigue el orden del texto, no hace falta continuar con las demás.</p></div>`}
     <div class="cn">¿Qué mostró el alumno?</div>
@@ -1153,7 +1275,7 @@ function viewDatos(){
 function render(){
   const k=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.k:null;
   const bk=document.getElementById('bk'), bkv=bk?bk.value:''; const et=document.getElementById('esc-txt'), etv=et?et.value:'';
-  renderTabs(); { const hf=document.getElementById('fields'); if(hf) hf.hidden=!S.g.ini; }
+  renderTabs(); renderTop(); { const hf=document.getElementById('fields'); if(hf) hf.hidden=!S.g.ini; if(!S.g.ini){ const fb=document.getElementById('fieldsbox'); if(fb) fb.hidden=true; } }
   document.getElementById('view').innerHTML= !S.g.ini?viewInicio(): tab==='grupo'?viewResumen(): tab==='escuela'?viewEscuela(): tab==='datos'?viewDatos(): tab==='informe'?viewInforme(): viewSkill(tab);
   if(bkv&&document.getElementById('bk')) document.getElementById('bk').value=bkv;
   if(etv&&document.getElementById('esc-txt')) document.getElementById('esc-txt').value=etv;
@@ -1172,8 +1294,12 @@ document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-a]'); if(!b) return;
   const act=b.dataset.a, a=S.a.find(x=>x.id===sel);
   msg='';
-  if(tm&&['sel','next','tab','go','inf'].includes(act)&&!(act==='tab'&&b.dataset.v===tab)) detenerLectura();
-  if(act==='tab'){ tab=b.dataset.v; confirmDel=null; confirmWipe=false; render(); }
+  if(tm&&['sel','next','prev','tab','go','inf'].includes(act)&&!(act==='tab'&&b.dataset.v===tab)) detenerLectura();
+  if(act==='tab'){ tab=b.dataset.v; masOpen=false; confirmDel=null; confirmWipe=false; render(); window.scrollTo(0,0); }
+  else if(act==='mas'){ masOpen=!masOpen; renderTabs(); }
+  else if(act==='cfg'){ const fb=document.getElementById('fieldsbox'); if(fb){ fb.hidden=!fb.hidden; if(!fb.hidden){ const fe=document.getElementById('f-escuela'); if(fe) fe.focus(); } } }
+  else if(act==='prev'&&S.a.length){ const i=S.a.findIndex(x=>x.id===sel); sel=S.a[(i-1+S.a.length)%S.a.length].id; render(); }
+  else if(act==='paso'){ const el=document.getElementById(b.dataset.v); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
   else if(act==='sel'){ sel=+b.dataset.v; confirmDel=null; render(); if(window.matchMedia('(max-width:860px)').matches) document.getElementById('ficha').scrollIntoView({behavior:'smooth',block:'start'}); }
   else if(act==='inf'){ sel=+b.dataset.v; tab='informe'; confirmDel=null; render(); }
   else if((act==='pdf'||act==='pdfall')&&dl){ const say=t=>{ const m=document.getElementById('repmsg'); if(m) m.textContent=t; };
@@ -1254,6 +1380,7 @@ document.addEventListener('change',ev=>{
   const t=ev.target, a=S.a.find(x=>x.id===sel);
   if(t.dataset.g){ S.g[t.dataset.g]=t.value; if(t.dataset.g==='escuela') renderFields(); touch(); }
   else if(t.dataset.n&&a){ a.n=t.value.trim()||a.n; touch(); }
+  else if(t.dataset.pw){ S.g.palx=S.g.palx||{}; const v=Math.round(+t.value); if(v>0&&v<5000) S.g.palx[pwKey()]=v; else delete S.g.palx[pwKey()]; touch(); }
   else if(t.dataset.timg){ const fm=t.files&&t.files[0]; t.value=''; if(fm){ const kk=tKey(timgIdx), old=timgs.get(kk); if(old) URL.revokeObjectURL(old); timgs.set(kk,URL.createObjectURL(fm)); idbImg('readwrite',s=>s.put(fm,kk)); render(); } }
   else if(t.dataset.tauto){ tAuto=t.checked; }
   else if(t.dataset.escfile){ const fl=Array.from(t.files||[]); t.value=''; leerArchivos(fl); }
